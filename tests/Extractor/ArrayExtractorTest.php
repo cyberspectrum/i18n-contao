@@ -140,4 +140,52 @@ class ArrayExtractorTest extends TestCase
             ],
         ], $array);
     }
+
+    /**
+     * Test.
+     *
+     * @return void
+     */
+    public function testSetOnEmpty(): void
+    {
+        $array = [];
+
+        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline->expects($this->once())->method('name')->willReturn('headline');
+        $headline
+            ->expects($this->exactly(2))
+            ->method('set')
+            ->willReturnCallback(function (array &$row, string $value = null) {
+                $row['headline'] = $value;
+            });
+
+        $text->expects($this->once())->method('name')->willReturn('text');
+        $text
+            ->expects($this->exactly(2))
+            ->method('set')
+            ->willReturnCallback(function (array &$row, string $value = null) {
+                $row['text'] = $value;
+            });
+
+        $extractor = new ArrayExtractor('items', [$headline, $text]);
+
+        $extractor->set('0.headline', $array, 'headline content 1');
+        $extractor->set('0.text', $array, 'text content 1');
+        $extractor->set('1.headline', $array, 'headline content 2');
+        $extractor->set('1.text', $array, 'text content 2');
+
+        $this->assertSame([
+            'items' => [
+                [
+                    'headline' => 'headline content 1',
+                    'text' => 'text content 1',
+                ],
+                [
+                    'headline' => 'headline content 2',
+                    'text' => 'text content 2',
+                ],
+            ],
+        ], $array);
+    }
 }

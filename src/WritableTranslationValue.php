@@ -35,7 +35,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
      */
     public function setSource(string $value)
     {
-        $row = [];
+        $row = $this->getSourceRow();
         $this->setValue($row, $value);
         $this->dictionary->updateRow($this->sourceId, $row);
 
@@ -47,7 +47,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
      */
     public function setTarget(string $value)
     {
-        $row = [];
+        $row = $this->getTargetRow();
         $this->setValue($row, $value);
         $this->dictionary->updateRow($this->targetId, $row);
 
@@ -59,7 +59,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
      */
     public function clearSource()
     {
-        $row = [];
+        $row = $this->getSourceRow();
         $this->setValue($row, null);
         $this->dictionary->updateRow($this->sourceId, $row);
 
@@ -71,7 +71,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
      */
     public function clearTarget()
     {
-        $row = [];
+        $row = $this->getTargetRow();
         $this->setValue($row, null);
         $this->dictionary->updateRow($this->targetId, $row);
 

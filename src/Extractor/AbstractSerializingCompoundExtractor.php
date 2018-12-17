@@ -67,7 +67,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
      */
     public function supports(array $row): bool
     {
-        return (array_key_exists($this->colName, $row) && (null !== $row[$this->colName]));
+        return (!array_key_exists($this->colName, $row) || \is_array($this->decode($row[$this->colName])));
     }
 
     /**
@@ -148,6 +148,10 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
                 $extractor->set(substr($path, (\strlen($chunks[0]) + 1)), $content, $value);
                 break;
             case $extractor instanceof StringExtractorInterface:
+                if (strlen($path) > strlen($chunks[0])) {
+                    throw new \InvalidArgumentException('String extractor may not contain sub extractor: "'
+                        . substr($path, (strlen($chunks[0]) + 1)) . '"');
+                }
                 $extractor->set($content, $value);
                 break;
             default:

@@ -67,7 +67,7 @@ class ArrayExtractor implements MultiStringExtractorInterface
      */
     public function supports(array $row): bool
     {
-        return (array_key_exists($this->colName, $row) && \is_array($row[$this->colName]));
+        return (!array_key_exists($this->colName, $row) || \is_array($row[$this->colName]));
     }
 
     /**
@@ -131,6 +131,9 @@ class ArrayExtractor implements MultiStringExtractorInterface
     {
         if (!$this->supports($row)) {
             return;
+        }
+        if (!array_key_exists($this->colName, $row)) {
+            $row[$this->colName] = [];
         }
 
         $content = &$row[$this->colName];

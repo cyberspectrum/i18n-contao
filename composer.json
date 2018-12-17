@@ -22,6 +22,8 @@
   },
   "require": {
     "php": "^7.1.3",
+    "ext-json": "*",
+    "ext-pdo": "*",
     "cyberspectrum/i18n": "^1.0.0@dev",
     "doctrine/dbal": "^2.9",
     "psr/container": "^1.0",
