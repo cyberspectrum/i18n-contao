@@ -21,18 +21,18 @@
     "source": "https://github.com/cyberspectrum/i18n-contao"
   },
   "require": {
-    "php": "^7.1.3",
+    "php": "^7.2",
     "ext-json": "*",
     "ext-pdo": "*",
     "cyberspectrum/i18n": "^1.0.0@dev",
     "doctrine/dbal": "^2.6",
     "psr/container": "^1.0",
     "psr/log": "^1.1",
-    "symfony/expression-language": "^3.4 | 4.1"
+    "symfony/expression-language": "^3.4 | ^4.1 | ^5.0"
   },
   "require-dev": {
-    "phpcq/all-tasks": "^1.2",
-    "symfony/debug": "^3.4 | ^4.1"
+    "phpcq/all-tasks": "^1.3",
+    "symfony/debug": "^3.4 | ^4.1 | ^5.0"
   },
   "suggest": {
     "cyberspectrum/i18n-contao-bundle": "For integration in Contao and service registration."
