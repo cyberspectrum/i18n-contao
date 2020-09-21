@@ -146,7 +146,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
             );
         }
 
-        // [id].propname
+        // Format is: [id].propname
         if (null === ($extractor = $this->getExtractor($chunks[1]))) {
             throw new NotSupportedException(
                 $this,
@@ -170,7 +170,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
             return false;
         }
 
-        // [id].propname
+        // Format is: [id].propname
         if (null === $this->getExtractor($chunks[1])) {
             return false;
         }
@@ -232,7 +232,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
             throw new NotSupportedException($this, 'Key ' . $key . ' is in bad format (need: [id].[prop-name])');
         }
 
-        // [id].propname
+        // Format is: [id].propname
         if (null === ($extractor = $this->getExtractor($chunks[1]))) {
             throw new NotSupportedException($this, 'Key ' . $key . ' is not supported (no extractor found)');
         }
