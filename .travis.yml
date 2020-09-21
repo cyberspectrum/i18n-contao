@@ -23,7 +23,6 @@ before_script:
   - echo "memory_limit=-1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/conf.d/travis.ini
   - travis_retry composer self-update && composer --version
   - travis_retry composer require symfony/expression-language ${SYMFONY_VERSION} --no-update
-  - travis_retry composer require symfony/debug ${SYMFONY_VERSION} --no-update --dev
   - >
     if [ "x${TRAVIS_TAG}" != "x" ]; then
       COMPOSER_ROOT_VERSION=${TRAVIS_TAG} travis_retry composer update --prefer-dist --no-interaction;
