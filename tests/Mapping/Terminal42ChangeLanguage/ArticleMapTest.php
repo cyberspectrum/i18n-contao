@@ -1,51 +1,35 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
+use ArrayIterator;
+use Closure;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-/**
- * This tests the article map.
- *
- * @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap
- */
+/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap */
 class ArticleMapTest extends TestCase
 {
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
+        $database
+            ->expects($this->once())
+            ->method('getRootPages')
+            ->willReturn([
+                ['id' => 101, 'language' => 'de', 'fallback' => '1'],
+                ['id' => 102, 'language' => 'fr', 'fallback' => ''],
+            ]);
+
         $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
         $pageMap  = $this
             ->getMockBuilder(PageMap::class)
-            ->setMethods(['buildMap', 'sourceIds', 'targetIds', 'getMainFromSource', 'getMainFromTarget'])
+            ->onlyMethods(['sourceIds', 'targetIds', 'getMainFromSource', 'getMainFromTarget'])
             ->setConstructorArgs([
                 'de',
                 'fr',
@@ -53,20 +37,20 @@ class ArticleMapTest extends TestCase
                 $logger
             ])
             ->getMock();
-        $pageMap->expects($this->once())->method('sourceIds')->willReturn(new \ArrayIterator([101, 102]));
+        $pageMap->expects($this->once())->method('sourceIds')->willReturn(new ArrayIterator([101, 102]));
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromSource')
             ->withConsecutive([101], [102])
             ->willReturn(1, 2);
 
-        $pageMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001, 1002]));
+        $pageMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001, 1002]));
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromTarget')
             ->withConsecutive([1001], [1002])
             ->willReturn(1, 2);
-        \Closure::fromCallable(function () {
+        Closure::fromCallable(function () {
             $this->mainLanguage = 'en';
         })->bindTo($pageMap, PageMap::class)->__invoke();
 

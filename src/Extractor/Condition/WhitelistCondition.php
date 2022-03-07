@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Extractor\Condition;
 
@@ -29,27 +12,18 @@ class WhitelistCondition implements ConditionInterface
     /**
      * The expression to evaluate.
      *
-     * @var ConditionInterface[]
+     * @var list<ConditionInterface>
      */
-    private $conditions;
+    private array $conditions;
 
     /**
      * Create a new instance.
      *
-     * @param ConditionInterface $condition One or more conditions.
-     *
-     * @throws \RuntimeException When an argument does not implement the condition interface.
+     * @param list<ConditionInterface> $conditions One or more conditions.
      */
-    public function __construct($condition)
+    public function __construct(ConditionInterface ...$conditions)
     {
-        foreach (\func_get_args() as $condition) {
-            if (!$condition instanceof ConditionInterface) {
-                throw new \RuntimeException(
-                    'Class ' . \get_class($condition) . ' does not implement ' . ConditionInterface::class
-                );
-            }
-            $this->conditions[] = $condition;
-        }
+        $this->conditions = array_values($conditions);
     }
 
     /**

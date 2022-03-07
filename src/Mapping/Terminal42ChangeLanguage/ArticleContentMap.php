@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
@@ -31,12 +14,8 @@ class ArticleContentMap implements MappingInterface
 {
     use MapTrait;
 
-    /**
-     * The article map.
-     *
-     * @var ArticleMap
-     */
-    private $articleMap;
+    /** The article map. */
+    private ArticleMap $articleMap;
 
     /**
      * Create a new instance.
@@ -55,11 +34,7 @@ class ArticleContentMap implements MappingInterface
         $this->buildMap();
     }
 
-    /**
-     * Build the map.
-     *
-     * @return void
-     */
+    /** Build the map. */
     private function buildMap(): void
     {
         // Loop over all articles in target language.
@@ -81,17 +56,15 @@ class ArticleContentMap implements MappingInterface
     /**
      * Map the passed elements.
      *
-     * @param array $elements     The elements to map.
-     * @param array $mainElements The main elements.
-     * @param array $map          The map to store elements to.
-     * @param array $inverse      The inverse map.
-     *
-     * @return void
+     * @param list<array{id: int, type: string}> $elements     The elements to map.
+     * @param list<array{id: int, type: string}> $mainElements The main elements.
+     * @param array<int, int>                    $map          The map to store elements to.
+     * @param array<int, int>                    $inverse      The inverse map.
      */
     private function mapElements(array $elements, array $mainElements, array &$map, array &$inverse): void
     {
         foreach ($elements as $index => $element) {
-            $elementId = (int) $element['id'];
+            $elementId = $element['id'];
             if (!array_key_exists($index, $mainElements)) {
                 $this->logger->warning(
                     'Content element {id} has no mapping in main. Element skipped.',
@@ -103,7 +76,7 @@ class ArticleContentMap implements MappingInterface
                 continue;
             }
             $mainElement = $mainElements[$index];
-            $mainId      = (int) $mainElement['id'];
+            $mainId      = $mainElement['id'];
             if ($element['type'] !== $mainElement['type']) {
                 $this->logger->warning(
                     'Content element {id} has different type as element in main. Element skipped.',

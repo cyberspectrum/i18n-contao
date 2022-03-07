@@ -1,76 +1,52 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Extractor;
+
+use InvalidArgumentException;
+use Traversable;
+
+use function array_key_exists;
+use function explode;
+use function is_array;
+use function serialize;
+use function strpos;
+use function substr;
+use function unserialize;
 
 /**
  * This extracts table values.
  */
 class TableExtractor implements MultiStringExtractorInterface
 {
-    /**
-     * The column name.
-     *
-     * @var string
-     */
-    private $colName;
+    /** The column name. */
+    private string $colName;
 
-    /**
-     * Create a new instance.
-     *
-     * @param string $colName
-     */
     public function __construct(string $colName)
     {
         $this->colName = $colName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function name(): string
     {
         return $this->colName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports(array $row): bool
     {
         return null !== $this->decode($row);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function keys(array $row): \Traversable
+    public function keys(array $row): Traversable
     {
         if (null === $content = $this->decode($row)) {
             return;
         }
 
-        foreach (array_keys($content) as $rowIndex) {
-            foreach (array_keys($content[$rowIndex]) as $col) {
-                if (null === $content[$rowIndex][$col]) {
+        foreach ($content as $rowIndex => $rowValues) {
+            foreach ($rowValues as $col => $colValue) {
+                if (null === $colValue) {
                     continue;
                 }
                 yield 'row' . $rowIndex . '.col' . $col;
@@ -78,57 +54,30 @@ class TableExtractor implements MultiStringExtractorInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws \InvalidArgumentException When the path does not contain valid row and column chunks.
-     */
     public function get(string $path, array $row): ?string
     {
         if (null === $content = $this->decode($row)) {
             return null;
         }
+        [$rowIndex, $colIndex] = $this->extractPath($path);
 
-        $pathChunks = explode('.', $path);
-        if (0 !== strpos($pathChunks[0], 'row')) {
-            throw new \InvalidArgumentException('Path ' . $path . ' first part must be row, found: ' . $pathChunks[0]);
-        }
-        if (0 !== strpos($pathChunks[1], 'col')) {
-            throw new \InvalidArgumentException('Path ' . $path . ' second part must be col, found: ' . $pathChunks[1]);
-        }
-
-        if ($value = ($content[(int) substr($pathChunks[0], 3)][(int) substr($pathChunks[1], 3)] ?? null)) {
+        if ($value = ($content[$rowIndex][$colIndex] ?? null)) {
             return $value;
         }
 
         return null;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws \InvalidArgumentException When the path does not contain valid row and column chunks.
-     */
-    public function set(string $path, array &$row, string $value = null): void
+    public function set(string $path, array &$row, ?string $value): void
     {
         if (null === $content = $this->decode($row)) {
             $content = [];
         }
+        [$rowIndex, $colIndex] = $this->extractPath($path);
 
-        $pathChunks = explode('.', $path);
-        if (0 !== strpos($pathChunks[0], 'row')) {
-            throw new \InvalidArgumentException('Path ' . $path . ' first part must be row, found: ' . $pathChunks[0]);
-        }
-        if (0 !== strpos($pathChunks[1], 'col')) {
-            throw new \InvalidArgumentException('Path ' . $path . ' second part must be col, found: ' . $pathChunks[1]);
-        }
-
-        $rowIndex = (int) substr($pathChunks[0], 3);
         if (!array_key_exists($rowIndex, $content)) {
             $content[$rowIndex] = [];
         }
-        $colIndex = (int) substr($pathChunks[1], 3);
-
         $content[$rowIndex][$colIndex] = $value;
 
         $row[$this->name()] = serialize($content);
@@ -137,23 +86,49 @@ class TableExtractor implements MultiStringExtractorInterface
     /**
      * Decode the row value.
      *
-     * @param array $row The row.
+     * @param array<string, mixed> $row The row.
      *
-     * @return array|null
+     * @return array<int, array<int, ?string>>|null
      */
     private function decode(array $row): ?array
     {
-        if (null === ($encoded = $row[$this->name()])) {
+        if (!is_string($encoded = $row[$this->name()])) {
             return null;
         }
 
         if (false === ($decoded  = unserialize($encoded, ['allowed_classes' => false]))) {
             return null;
         }
-        if (!\is_array($decoded)) {
+        if (!is_array($decoded)) {
             return null;
         }
+        /** @var array<int, array<int, ?string>> $decoded */
+        // FIXME: we might want to scan that the array signature matches but rather do not here for performance reasons.
 
         return $decoded;
+    }
+
+    /** @return array{0: int, 1: int} */
+    private function extractPath(string $path): array
+    {
+        $pathChunks = explode('.', $path);
+        if (2 !== count($pathChunks)) {
+            throw new InvalidArgumentException('Path ' . $path . ' must be row[0-9]+.col[0-9]+, found: ' . $path);
+        }
+        if (0 !== strpos($pathChunks[0], 'row')) {
+            throw new InvalidArgumentException('Path ' . $path . ' first part must be row, found: ' . $pathChunks[0]);
+        }
+        if (0 !== strpos($pathChunks[1], 'col')) {
+            throw new InvalidArgumentException('Path ' . $path . ' second part must be col, found: ' . $pathChunks[1]);
+        }
+
+        if (!is_numeric($row = substr($pathChunks[0], 3))) {
+            throw new \InvalidArgumentException('Non numeric row value: ' . $row);
+        }
+        if (!is_numeric($col = substr($pathChunks[1], 3))) {
+            throw new \InvalidArgumentException('Non numeric column value: ' . $row);
+        }
+
+        return [(int) $row, (int) $col];
     }
 }

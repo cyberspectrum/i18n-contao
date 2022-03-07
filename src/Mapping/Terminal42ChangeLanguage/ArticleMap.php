@@ -1,28 +1,13 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\MappingInterface;
 use Psr\Log\LoggerInterface;
+
+use function in_array;
 
 /**
  * This maps page ids between a source language and a target language.
@@ -31,16 +16,10 @@ class ArticleMap implements MappingInterface
 {
     use MapTrait;
 
-    /**
-     * The page map.
-     *
-     * @var PageMap
-     */
-    private $pageMap;
+    /** The page map. */
+    private PageMap $pageMap;
 
     /**
-     * Create a new instance.
-     *
      * @param PageMap         $pageMap The page map.
      * @param LoggerInterface $logger  The logger to use.
      */
@@ -55,12 +34,8 @@ class ArticleMap implements MappingInterface
         $this->buildMap();
     }
 
-    /**
-     * Build the map.
-     *
-     * @return void
-     */
-    protected function buildMap(): void
+    /** Build the map. */
+    private function buildMap(): void
     {
         // Fetch articles mapped from source to main.
         foreach ($this->pageMap->sourceIds() as $page) {
@@ -79,11 +54,9 @@ class ArticleMap implements MappingInterface
     /**
      * Fetch articles from a page.
      *
-     * @param int   $pageId   The target page id.
-     * @param array $map      The map to update.
-     * @param int   $mainPage The id of the page in the main language.
-     *
-     * @return void
+     * @param int             $pageId   The target page id.
+     * @param array<int, int> $map      The map to update.
+     * @param int             $mainPage The id of the page in the main language.
      */
     private function fetchArticlesFrom(int $pageId, array &$map, int $mainPage): void
     {
@@ -93,10 +66,12 @@ class ArticleMap implements MappingInterface
 
         if (empty($articles)) {
             // Skip non regular pages - these are known to not have articles within.
-            if (\in_array(
-                $pageType = $this->pageMap->getTypeFor($pageId),
-                ['error_403', 'error_404', 'forward', 'redirect', 'root']
-            )) {
+            if (
+                in_array(
+                    $pageType = $this->pageMap->getTypeFor($pageId),
+                    ['error_403', 'error_404', 'forward', 'redirect', 'root']
+                )
+            ) {
                 return;
             }
 
@@ -113,22 +88,22 @@ class ArticleMap implements MappingInterface
 
         // If the language page and main page are same, we do identity mapping.
         if ($pageId === $mainPage) {
-            foreach ($articles as $index => $article) {
-                $articleId       = (int) $article['id'];
+            foreach ($articles as $article) {
+                $articleId       = $article['id'];
                 $map[$articleId] = $articleId;
             }
             return;
         }
 
         foreach ($articles as $index => $article) {
-            $mainId    = (int) $article['languageMain'];
-            $articleId = (int) $article['id'];
+            $mainId    = $article['languageMain'];
+            $articleId = $article['id'];
             if (empty($mainId)) {
                 if (0 === ($mainId = $this->determineMapFor($index, $article['inColumn'], $mainPage))) {
                     $this->logger->warning(
                         'Article {id} in page {page} has no fallback set and unable to determine automatically. ' .
                         'Article skipped.',
-                        ['id' => $articleId, 'page' => (int) $article['pid'], 'msg_type' => 'article_no_fallback']
+                        ['id' => $articleId, 'page' => $article['pid'], 'msg_type' => 'article_no_fallback']
                     );
                     continue;
                 }
@@ -162,6 +137,6 @@ class ArticleMap implements MappingInterface
         // Lookup all children of page in main language.
         $mainSiblings = $this->database->getArticlesByPid($mainPage, $column);
 
-        return isset($mainSiblings[$index]) ? (int) $mainSiblings[$index]['id'] : 0;
+        return $mainSiblings[$index]['id'] ?? 0;
     }
 }

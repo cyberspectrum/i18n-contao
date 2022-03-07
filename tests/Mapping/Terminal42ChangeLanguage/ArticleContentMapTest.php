@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
@@ -27,25 +10,16 @@ use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
-/**
- * This tests the article map.
- *
- * @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleContentMap
- */
+/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleContentMap */
 class ArticleContentMapTest extends TestCase
 {
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testBuildsMapCorrectly(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -130,18 +104,13 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame(2, $map->getMainFromTarget(1002));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testSkipsForUnknownMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -190,18 +159,13 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], \iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testIgnoresDifferentTypeInSource(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -255,18 +219,13 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], \iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testIgnoresDifferentTypeInTarget(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -320,18 +279,13 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], \iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
     public function testIgnoresDifferentTypeInMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
