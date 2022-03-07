@@ -15,11 +15,14 @@ class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtrac
 {
     protected function decode(string $value): array
     {
-        if (!is_array($result = json_decode($value, true))) {
-            return [];
-        }
+        /** @var mixed $content */
+        $content = json_decode($value, true);
 
-        return $result;
+        if (is_array($content)) {
+            /** @var array<string, mixed> $content */
+            return $content;
+        }
+        return [];
     }
 
     protected function encode(array $value): string

@@ -18,7 +18,11 @@ class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
         /** @var mixed $content */
         $content = unserialize($value, ['allowed_classes' => false]);
 
-        return is_array($content) ? $content : [];
+        if (is_array($content)) {
+            /** @var array<string, mixed> $content */
+            return $content;
+        }
+        return [];
     }
 
     /**
