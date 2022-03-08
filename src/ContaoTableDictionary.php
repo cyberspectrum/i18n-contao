@@ -191,13 +191,16 @@ class ContaoTableDictionary implements WritableDictionaryInterface
      */
     public function getRow(int $idNumber): array
     {
-        $result = $this->getConnection()->createQueryBuilder()
+        $queryBuilder = $this->getConnection()->createQueryBuilder()
             ->select('*')
             ->from($this->tableName)
             ->where('id=:id')
             ->setParameter('id', $idNumber)
-            ->setMaxResults(1)
-            ->executeQuery()
+            ->setMaxResults(1);
+
+        $result = $this
+            ->connection
+            ->executeQuery($queryBuilder->getSQL(), $queryBuilder->getParameters(), $queryBuilder->getParameterTypes())
             ->fetchAssociative();
         if (!is_array($result)) {
             throw new InvalidArgumentException('Failed to fetch row with id ' . $idNumber);

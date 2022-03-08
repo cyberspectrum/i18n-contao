@@ -263,16 +263,17 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      */
     private function getContaoLanguages(): array
     {
-        /** @var list<string> $languages */
-        $languages = $this->connection
+        $builder = $this->connection
             ->createQueryBuilder()
             ->select('language')
             ->from('tl_page')
             ->where('type=:type')
             ->setParameter('type', 'root')
             ->orderBy('fallback')
-            ->addOrderBy('sorting')
-            ->executeQuery()
+            ->addOrderBy('sorting');
+        /** @var list<string> $languages */
+        $languages = $this->connection
+            ->executeQuery($builder->getSQL(), $builder->getParameters(), $builder->getParameterTypes())
             ->fetchFirstColumn();
 
         return $languages;

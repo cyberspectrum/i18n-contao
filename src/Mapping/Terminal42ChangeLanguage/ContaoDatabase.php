@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Result;
 
 /**
  * This provides access to the Contao database.
@@ -32,14 +34,13 @@ class ContaoDatabase
     public function getRootPages(): array
     {
         /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
-        $rows = $this->connection->createQueryBuilder()
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('language', 'id', 'fallback')
             ->from('tl_page')
             ->where('type=:type')
             ->setParameter('type', 'root')
             ->orderBy('fallback')
-            ->addOrderBy('sorting')
-            ->executeQuery();
+            ->addOrderBy('sorting'));
         $result = [];
         while ($row = $rows->fetchAssociative()) {
             /** @var array{language: string, id: string, fallback: string} $row */
@@ -62,13 +63,12 @@ class ContaoDatabase
     public function getPagesByPidList(array $pidList): array
     {
         /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
-        $rows = $this->connection->createQueryBuilder()
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('id', 'pid', 'languageMain', 'type')
             ->from('tl_page')
             ->where('pid IN (:lookupQueue)')
             ->setParameter('lookupQueue', $pidList, Connection::PARAM_INT_ARRAY)
-            ->orderBy('sorting')
-            ->executeQuery();
+            ->orderBy('sorting'));
         $result = [];
         while ($row = $rows->fetchAssociative()) {
             /** @var array{id: string, pid: string, languageMain: string, type: string} $row */
@@ -106,7 +106,7 @@ class ContaoDatabase
                 ->setParameter('inColumn', $inColumn);
         }
 
-        $rows = $builder->executeQuery();
+        $rows = $this->executeQuery($builder);
         $result = [];
         while ($row = $rows->fetchAssociative()) {
             /** @var array{id: string, pid: string, languageMain: string, inColumn: string} $row */
@@ -131,15 +131,14 @@ class ContaoDatabase
     public function getContentByPidFrom(int $articleId, string $pTable): array
     {
         /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
-        $rows = $this->connection->createQueryBuilder()
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('id', 'type')
             ->from('tl_content')
             ->where('pid=:pid')
             ->setParameter('pid', $articleId)
             ->andWhere('ptable=:ptable')
             ->setParameter('ptable', $pTable)
-            ->orderBy('sorting')
-            ->executeQuery();
+            ->orderBy('sorting'));
 
         $result = [];
         while ($row = $rows->fetchAssociative()) {
@@ -156,5 +155,15 @@ class ContaoDatabase
     public function getConnection(): Connection
     {
         return $this->connection;
+    }
+
+    /**
+     * TODO: To be removed when we drop support for doctrine/dbal 2.13.
+     */
+    private function executeQuery(QueryBuilder $queryBuilder): Result
+    {
+        return $this
+            ->connection
+            ->executeQuery($queryBuilder->getSQL(), $queryBuilder->getParameters(), $queryBuilder->getParameterTypes());
     }
 }
