@@ -297,6 +297,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
                 if (!is_string($item['map'] ?? $name)) {
                     throw new InvalidArgumentException('Map name must be a string.');
                 }
+                return;
             }
 
             throw new InvalidArgumentException('Invalid meta data');
