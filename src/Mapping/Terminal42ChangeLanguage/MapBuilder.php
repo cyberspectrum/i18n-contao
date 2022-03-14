@@ -7,6 +7,7 @@ namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 use CyberSpectrum\I18N\Contao\Mapping\MapBuilderInterface;
 use CyberSpectrum\I18N\Contao\Mapping\MappingInterface;
 use InvalidArgumentException;
+use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -16,7 +17,7 @@ use function in_array;
 /**
  * This provides the table mappings when using changelanguage by terminal42.
  */
-class MapBuilder implements MapBuilderInterface
+class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
