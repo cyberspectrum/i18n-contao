@@ -26,8 +26,8 @@
     "ext-pdo": "*",
     "cyberspectrum/i18n": "^1.1@dev",
     "doctrine/dbal": "^3.3",
-    "psr/container": "^2.0",
-    "psr/log": "^3.0",
+    "psr/container": "^1.0 || ^2.0",
+    "psr/log": "^2.0 || ^3.0",
     "symfony/expression-language": "^5.4 || ^6.0"
   },
   "require-dev": {
