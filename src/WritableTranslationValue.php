@@ -1,102 +1,66 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao;
 
 use CyberSpectrum\I18N\Contao\Extractor\StringExtractorInterface;
 use CyberSpectrum\I18N\Contao\Extractor\MultiStringExtractorInterface;
 use CyberSpectrum\I18N\TranslationValue\WritableTranslationValueInterface;
+use InvalidArgumentException;
 
-/**
- * This is the Contao translation value writer.
- */
+use function get_class;
+
+/** This is the Contao translation value writer. */
 class WritableTranslationValue extends TranslationValue implements WritableTranslationValueInterface
 {
-    /**
-     * {@inheritDoc}
-     */
-    public function setSource(string $value)
+    public function setSource(string $value): void
     {
         $row = $this->getSourceRow();
         $this->setValue($row, $value);
         $this->dictionary->updateRow($this->sourceId, $row);
-
-        return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function setTarget(string $value)
+    public function setTarget(string $value): void
     {
         $row = $this->getTargetRow();
         $this->setValue($row, $value);
         $this->dictionary->updateRow($this->targetId, $row);
-
-        return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function clearSource()
+    public function clearSource(): void
     {
         $row = $this->getSourceRow();
         $this->setValue($row, null);
         $this->dictionary->updateRow($this->sourceId, $row);
-
-        return $this;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function clearTarget()
+    public function clearTarget(): void
     {
         $row = $this->getTargetRow();
         $this->setValue($row, null);
         $this->dictionary->updateRow($this->targetId, $row);
-
-        return $this;
     }
 
     /**
      * Set a value.
      *
-     * @param array       $row   The row to get the value from.
-     * @param string|null $value The value to set.
+     * @param array<string, mixed> $row   The row to get the value from.
+     * @param string|null          $value The value to set.
      *
-     * @return string|null
-     *
-     * @throws \InvalidArgumentException When the extractor is of unknown type.
+     * @throws InvalidArgumentException When the extractor is of unknown type.
      */
-    protected function setValue(array &$row, string $value = null): ?string
+    private function setValue(array &$row, ?string $value): void
     {
         switch (true) {
             case $this->extractor instanceof MultiStringExtractorInterface:
-                return $this->extractor->set($this->trail, $row, $value);
+                $this->extractor->set($this->trail, $row, $value);
+                break;
             case $this->extractor instanceof StringExtractorInterface:
-                return $this->extractor->set($row, $value);
+                $this->extractor->set($row, $value);
+                break;
             default:
-                throw new \InvalidArgumentException('Unknown extractor type ' . \get_class($this->extractor));
+                throw new InvalidArgumentException('Unknown extractor type ' . get_class($this->extractor));
         }
     }
 }

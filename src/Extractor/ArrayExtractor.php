@@ -1,50 +1,37 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Extractor;
+
+use InvalidArgumentException;
+use Traversable;
+
+use function array_key_exists;
+use function array_slice;
+use function explode;
+use function get_class;
+use function implode;
+use function is_array;
 
 /**
  * This extracts numerical indexed arrays of values.
  */
 class ArrayExtractor implements MultiStringExtractorInterface
 {
-    /**
-     * The column name.
-     *
-     * @var string
-     */
-    private $colName;
+    /** The column name. */
+    private string $colName;
 
     /**
      * The extractors.
      *
-     * @var ExtractorInterface[]
+     * @var array<string, ExtractorInterface>
      */
-    private $extractors = [];
+    private array $extractors = [];
 
     /**
-     * Create a new instance.
-     *
-     * @param string $colName       The column name.
-     * @param array  $subExtractors The sub extractors.
+     * @param string                   $colName       The column name.
+     * @param list<ExtractorInterface> $subExtractors The sub extractors.
      */
     public function __construct(string $colName, array $subExtractors)
     {
@@ -54,80 +41,80 @@ class ArrayExtractor implements MultiStringExtractorInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function name(): string
     {
         return $this->colName;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function supports(array $row): bool
     {
-        return (!array_key_exists($this->colName, $row) || \is_array($row[$this->colName]));
+        return (!array_key_exists($this->colName, $row) || is_array($row[$this->colName]));
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function keys(array $row): \Traversable
+    public function keys(array $row): Traversable
     {
         if (!$this->supports($row)) {
             return;
         }
 
         $content = $row[$this->colName];
+        if (!is_array($content)) {
+            throw new InvalidArgumentException('Invalid row value');
+        }
+        /** @var mixed $item */
         foreach ($content as $arrayKey => $item) {
-            foreach (array_keys($this->extractors) as $key) {
+            $this->ensureArray((string) $arrayKey, $content);
+            /** @var array<string, mixed> $item */
+            foreach ($this->extractors as $key => $extractor) {
                 if (array_key_exists($key, $item)) {
-                    yield $arrayKey . '.' . $key;
+                    $prefix = $arrayKey . '.' . $key;
+                    switch (true) {
+                        case $extractor instanceof MultiStringExtractorInterface:
+                            foreach ($extractor->keys($item) as $subKey) {
+                                yield $prefix . '.' . $subKey;
+                            }
+                            break;
+                        case $extractor instanceof StringExtractorInterface:
+                            yield $prefix;
+                            break;
+                        default:
+                            throw new InvalidArgumentException('Unknown extractor type ' . get_class($extractor));
+                    }
                 }
             }
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws \InvalidArgumentException When the extractor can not be found.
-     */
     public function get(string $path, array $row): ?string
     {
         if (!$this->supports($row)) {
             return null;
         }
 
-        $content = $row[$this->colName];
-        $chunks  = explode('.', $path);
-        if (!array_key_exists($chunks[0], $content)) {
+        $arrayContent = $row[$this->colName];
+        $this->ensureArray($this->colName, $arrayContent);
+        $chunks  = explode('.', $path, 3);
+        if (!array_key_exists($chunks[0], $arrayContent)) {
             return null;
         }
-        $content = $content[$chunks[0]];
+        /** @var mixed $content */
+        $content = $arrayContent[$chunks[0]];
+        $this->ensureArray($this->colName . '.' . $chunks[0], $content);
 
-        if (null === ($extractor = $this->extractors[$chunks[1]] ?? null)) {
-            throw new \InvalidArgumentException('Sub extractor ' . $chunks[1] . ' not found');
-        }
+        $extractor = $this->getExtractor($chunks[1]);
 
         switch (true) {
             case $extractor instanceof MultiStringExtractorInterface:
-                return $extractor->get(implode('.', \array_slice($chunks, 2)), $content);
+                return $extractor->get($chunks[2], $content);
             case $extractor instanceof StringExtractorInterface:
                 return $extractor->get($content);
             default:
         }
 
-        throw new \InvalidArgumentException('Unknown extractor type ' . \get_class($extractor));
+        throw new InvalidArgumentException('Unknown extractor type ' . get_class($extractor));
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws \InvalidArgumentException When the extractor can not be found.
-     */
-    public function set(string $path, array &$row, string $value = null): void
+    public function set(string $path, array &$row, ?string $value): void
     {
         if (!$this->supports($row)) {
             return;
@@ -136,20 +123,21 @@ class ArrayExtractor implements MultiStringExtractorInterface
             $row[$this->colName] = [];
         }
 
-        $content = &$row[$this->colName];
+        /** @var mixed $arrayContent */
+        $arrayContent = &$row[$this->colName];
+        $this->ensureArray($this->colName, $arrayContent);
         $chunks  = explode('.', $path);
-        if (!array_key_exists($chunks[0], $content)) {
-            $content[$chunks[0]] = [];
+        if (!array_key_exists($chunks[0], $arrayContent)) {
+            $arrayContent[$chunks[0]] = [];
         }
-        $content = &$content[$chunks[0]];
+        $content = &$arrayContent[$chunks[0]];
+        $this->ensureArray($this->colName . '.' . $chunks[0], $content);
 
-        if (null === ($extractor = $this->extractors[$chunks[1]] ?? null)) {
-            throw new \InvalidArgumentException('Sub extractor ' . $chunks[1] . ' not found');
-        }
+        $extractor = $this->getExtractor($chunks[1]);
 
         switch (true) {
             case $extractor instanceof MultiStringExtractorInterface:
-                $extractor->set(implode('.', \array_slice($chunks, 2)), $content, $value);
+                $extractor->set(implode('.', array_slice($chunks, 2)), $content, $value);
                 return;
             case $extractor instanceof StringExtractorInterface:
                 $extractor->set($content, $value);
@@ -157,20 +145,36 @@ class ArrayExtractor implements MultiStringExtractorInterface
             default:
         }
 
-        throw new \InvalidArgumentException('Unknown extractor type ' . \get_class($extractor));
+        throw new InvalidArgumentException('Unknown extractor type ' . get_class($extractor));
     }
 
     /**
      * Add an extractor.
      *
      * @param ExtractorInterface $extractor The extractor to add.
-     *
-     * @return self
      */
-    public function addExtractor(ExtractorInterface $extractor): self
+    public function addExtractor(ExtractorInterface $extractor): void
     {
         $this->extractors[$extractor->name()] = $extractor;
+    }
 
-        return $this;
+    private function getExtractor(string $name): ExtractorInterface
+    {
+        if (null === ($extractor = $this->extractors[$name] ?? null)) {
+            throw new InvalidArgumentException('Sub extractor ' . $name . ' not found');
+        }
+
+        return $extractor;
+    }
+
+    /**
+     * @param mixed $value
+     * @psalm-assert array<string, mixed> $value
+     */
+    private function ensureArray(string $path, $value): void
+    {
+        if (!is_array($value)) {
+            throw new InvalidArgumentException('Expected array at ' . $path);
+        }
     }
 }

@@ -1,39 +1,20 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Doctrine\DBAL\Result;
 
 /**
  * This provides access to the Contao database.
  */
 class ContaoDatabase
 {
-    /**
-     * The connection.
-     *
-     * @var Connection
-     */
-    private $connection;
+    /** The connection. */
+    private Connection $connection;
 
     /**
      * Create a new instance.
@@ -48,38 +29,57 @@ class ContaoDatabase
     /**
      * Fetch the root pages from the database.
      *
-     * @return array
+     * @return list<array{language: string, id: int, fallback: string}>
      */
     public function getRootPages(): array
     {
-        return $this->connection->createQueryBuilder()
+        /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('language', 'id', 'fallback')
             ->from('tl_page')
             ->where('type=:type')
             ->setParameter('type', 'root')
             ->orderBy('fallback')
-            ->addOrderBy('sorting')
-            ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->addOrderBy('sorting'));
+        $result = [];
+        while ($row = $rows->fetchAssociative()) {
+            /** @var array{language: string, id: string, fallback: string} $row */
+            $result[] = [
+                'language' => $row['language'] ,
+                'id' => (int) $row['id'],
+                'fallback' => $row['fallback'],
+            ];
+        }
+        return $result;
     }
 
     /**
-     * Fetch pages by pids.
+     * Fetch pages by pid.
      *
-     * @param array $pidList The pid list.
+     * @param list<int> $pidList The pid list.
      *
-     * @return array
+     * @return list<array{id: int, pid: int, languageMain: int, type: string}>
      */
     public function getPagesByPidList(array $pidList): array
     {
-        return $this->connection->createQueryBuilder()
+        /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('id', 'pid', 'languageMain', 'type')
             ->from('tl_page')
             ->where('pid IN (:lookupQueue)')
             ->setParameter('lookupQueue', $pidList, Connection::PARAM_INT_ARRAY)
-            ->orderBy('sorting')
-            ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->orderBy('sorting'));
+        $result = [];
+        while ($row = $rows->fetchAssociative()) {
+            /** @var array{id: string, pid: string, languageMain: string, type: string} $row */
+            $result[] = [
+                'id' => (int) $row['id'],
+                'pid' => (int) $row['pid'],
+                'languageMain' => (int) $row['languageMain'] ,
+                'type' => $row['type'],
+            ];
+        }
+        return $result;
     }
 
     /**
@@ -88,12 +88,13 @@ class ContaoDatabase
      * @param int         $pageId   The page id.
      * @param string|null $inColumn The optional column to filter by.
      *
-     * @return array
+     * @return list<array{id: int, pid: int, languageMain: int, inColumn: string}>
      */
-    public function getArticlesByPid(int $pageId, string $inColumn = null): array
+    public function getArticlesByPid(int $pageId, ?string $inColumn = null): array
     {
+        /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
         $builder = $this->connection->createQueryBuilder()
-            ->select('id', 'pid', 'inColumn', 'languageMain')
+            ->select('id', 'pid', 'languageMain', 'inColumn')
             ->from('tl_article')
             ->where('pid=:pid')
             ->setParameter('pid', $pageId)
@@ -105,9 +106,18 @@ class ContaoDatabase
                 ->setParameter('inColumn', $inColumn);
         }
 
-        return $builder
-            ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+        $rows = $this->executeQuery($builder);
+        $result = [];
+        while ($row = $rows->fetchAssociative()) {
+            /** @var array{id: string, pid: string, languageMain: string, inColumn: string} $row */
+            $result[] = [
+                'id' => (int) $row['id'],
+                'pid' => (int) $row['pid'],
+                'languageMain' => (int) $row['languageMain'] ,
+                'inColumn' => $row['inColumn'],
+            ];
+        }
+        return $result;
     }
 
     /**
@@ -116,31 +126,44 @@ class ContaoDatabase
      * @param int    $articleId The article id of the parenting article.
      * @param string $pTable    The parenting table.
      *
-     * @return array
+     * @return list<array{id: int, type: string}>
      */
     public function getContentByPidFrom(int $articleId, string $pTable): array
     {
-        $result = $this->connection->createQueryBuilder()
+        /** @psalm-suppress TooManyArguments - select accepts more than one argument. */
+        $rows = $this->executeQuery($this->connection->createQueryBuilder()
             ->select('id', 'type')
             ->from('tl_content')
             ->where('pid=:pid')
             ->setParameter('pid', $articleId)
             ->andWhere('ptable=:ptable')
             ->setParameter('ptable', $pTable)
-            ->orderBy('sorting')
-            ->execute()
-            ->fetchAll(\PDO::FETCH_ASSOC);
+            ->orderBy('sorting'));
+
+        $result = [];
+        while ($row = $rows->fetchAssociative()) {
+            /** @var array{id: string, type: string} $row */
+            $result[] = [
+                'id' => (int) $row['id'],
+                'type' => $row['type'],
+            ];
+        }
 
         return $result;
     }
 
-    /**
-     * Get the connection.
-     *
-     * @return Connection
-     */
     public function getConnection(): Connection
     {
         return $this->connection;
+    }
+
+    /**
+     * TODO: To be removed when we drop support for doctrine/dbal 2.13.
+     */
+    private function executeQuery(QueryBuilder $queryBuilder): Result
+    {
+        return $this
+            ->connection
+            ->executeQuery($queryBuilder->getSQL(), $queryBuilder->getParameters(), $queryBuilder->getParameterTypes());
     }
 }

@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Extractor\Condition;
 
@@ -28,19 +11,11 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
  */
 class ExpressionLanguageCondition implements ConditionInterface
 {
-    /**
-     * The expression to evaluate.
-     *
-     * @var string
-     */
-    private $expression;
+    /** The expression to evaluate. */
+    private string $expression;
 
-    /**
-     * The expression language evaluator.
-     *
-     * @var ExpressionLanguage
-     */
-    private $expressionLanguage;
+    /** The expression language evaluator. */
+    private ExpressionLanguage $expressionLanguage;
 
     /**
      * Create a new instance.
@@ -54,9 +29,6 @@ class ExpressionLanguageCondition implements ConditionInterface
         $this->expressionLanguage = $expressionLanguage;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function evaluate(array $row): bool
     {
         return (bool) $this->expressionLanguage->evaluate($this->expression, ['row' => (object) $row]);

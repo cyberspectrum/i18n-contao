@@ -1,43 +1,20 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\Debug\BufferingLogger;
+use InvalidArgumentException;
+use Symfony\Component\ErrorHandler\BufferingLogger;
 
-/**
- * This tests the MapTrait.
- *
- * @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait
- */
+use function iterator_to_array;
+
+/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait */
 class MapTraitTest extends TestCase
 {
-    /**
-     * Test.
-     *
-     * @return void
-     */
     public function testGetters(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -48,8 +25,8 @@ class MapTraitTest extends TestCase
         $this->assertSame('fr', $instance->getSourceLanguage());
         $this->assertSame('de', $instance->getTargetLanguage());
         $this->assertSame('en', $instance->getMainLanguage());
-        $this->assertSame([100, 200], \iterator_to_array($instance->sourceIds()));
-        $this->assertSame([1000, 2000], \iterator_to_array($instance->targetIds()));
+        $this->assertSame([100, 200], iterator_to_array($instance->sourceIds()));
+        $this->assertSame([1000, 2000], iterator_to_array($instance->targetIds()));
         $this->assertTrue($instance->hasTargetFor(100));
         $this->assertFalse($instance->hasTargetFor(101));
         $this->assertSame(1000, $instance->getTargetIdFor(100));
@@ -59,76 +36,56 @@ class MapTraitTest extends TestCase
         $this->assertSame($database, $instance->getDatabase());
     }
 
-    /**
-     * Test.
-     *
-     * @return void
-     */
     public function testGetTargetIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
         $instance = new MapTraitDouble([], [], $database, $logger);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Not mapped');
 
         $instance->getTargetIdFor(1);
     }
 
-    /**
-     * Test.
-     *
-     * @return void
-     */
     public function testGetSourceIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
         $instance = new MapTraitDouble([], [], $database, $logger);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Not mapped');
 
         $instance->getSourceIdFor(1);
     }
 
-    /**
-     * Test.
-     *
-     * @return void
-     */
     public function testMainFromSourceThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
         $instance = new MapTraitDouble([], [], $database, $logger);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Not mapped');
 
         $instance->getMainFromSource(1);
     }
 
-    /**
-     * Test.
-     *
-     * @return void
-     */
     public function testGetMainFromTargetThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
         $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
         $instance = new MapTraitDouble([], [], $database, $logger);
 
-        $this->expectException(\RuntimeException::class);
+        $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Not mapped');
 
         $instance->getMainFromTarget(1);
     }
 
     /**
-     * Test provider for the analyze method.
+     * Test provider for the 'analyze' method.
      *
      * @return array
      */

@@ -1,28 +1,13 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\MappingInterface;
+use InvalidArgumentException;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * This maps page ids between a source language and a target language.
@@ -34,9 +19,9 @@ class PageMap implements MappingInterface
     /**
      * Buffer the page types.
      *
-     * @var string
+     * @var array<int, string>
      */
-    private $types;
+    private array $types = [];
 
     /**
      * Create a new instance.
@@ -63,20 +48,14 @@ class PageMap implements MappingInterface
      * Obtain the page type for the passed page id.
      *
      * @param int $pageId The page id.
-     *
-     * @return string
      */
     public function getTypeFor(int $pageId): string
     {
         return ($this->types[$pageId] ?? 'unknown');
     }
 
-    /**
-     * Build the map.
-     *
-     * @return void
-     */
-    protected function buildMap(): void
+    /** Build the map. */
+    private function buildMap(): void
     {
         $roots = $this->findRootPages();
 
@@ -88,9 +67,9 @@ class PageMap implements MappingInterface
     /**
      * Determine the root pages.
      *
-     * @return int[]
+     * @return array{main: int, source: int, target: int}
      *
-     * @throws \RuntimeException When a root page is missing.
+     * @throws RuntimeException When a root page is missing.
      */
     private function findRootPages(): array
     {
@@ -109,18 +88,18 @@ class PageMap implements MappingInterface
 
             if ('1' === $root['fallback']) {
                 $this->mainLanguage = $language;
-                $result['main']     = (int) $root['id'];
+                $result['main']     = $root['id'];
             }
 
             if ($language === $this->sourceLanguage) {
-                $result['source'] = (int) $root['id'];
+                $result['source'] = $root['id'];
             }
             if ($language === $this->targetLanguage) {
-                $result['target'] = (int) $root['id'];
+                $result['target'] = $root['id'];
             }
 
             // Keep type for being able to filter unknown pages in i.e. articles.
-            $this->types[(int) $root['id']] = 'root';
+            $this->types[$root['id']] = 'root';
         }
 
         $this->logger->debug(
@@ -129,7 +108,7 @@ class PageMap implements MappingInterface
         );
 
         if (null === $result['source'] || null === $result['target'] || null === $result['main']) {
-            throw new \RuntimeException('Not all root pages could be found: ' . var_export($result, true));
+            throw new RuntimeException('Not all root pages could be found: ' . var_export($result, true));
         }
 
         return $result;
@@ -138,14 +117,12 @@ class PageMap implements MappingInterface
     /**
      * Build a map for a language and returns the map from source to main.
      *
-     * @param int   $mainRoot  The main language root page.
-     * @param int   $otherRoot The root page of the other language.
-     * @param array $map       The mapping array to populate.
-     * @param array $inverse   The inverse mapping.
-     *
-     * @return int[]
+     * @param int             $mainRoot  The main language root page.
+     * @param int             $otherRoot The root page of the other language.
+     * @param array<int, int> $map       The mapping array to populate.
+     * @param array<int, int> $inverse   The inverse mapping.
      */
-    private function buildPageMap(int $mainRoot, int $otherRoot, array &$map, array &$inverse): array
+    private function buildPageMap(int $mainRoot, int $otherRoot, array &$map, array &$inverse): void
     {
         // Root pages are mapped to each other.
         $map[$otherRoot]    = $mainRoot;
@@ -166,11 +143,11 @@ class PageMap implements MappingInterface
             $lookupQueue = [];
 
             foreach ($children as $index => $child) {
-                $childId = (int) $child['id'];
-                $main    = $isMain ? $childId : (int) $child['languageMain'];
+                $childId = $child['id'];
+                $main    = $isMain ? $childId : $child['languageMain'];
                 // Try to determine automatically.
                 if (!$isMain && empty($main)) {
-                    if (null === ($main = $this->determineMapFor($index, (int) $child['pid'], $map))) {
+                    if (null === ($main = $this->determineMapFor($index, $child['pid'], $map))) {
                         $this->logger->warning(
                             'Page {id} has no fallback set and unable to determine automatically. Page skipped.',
                             ['id' => $childId]
@@ -193,25 +170,21 @@ class PageMap implements MappingInterface
                 $lookupQueue[] = $childId;
             }
         } while (true);
-
-        return $map;
     }
 
     /**
      * Determine the mapping for the passed index.
      *
-     * @param int   $index       The index to look up.
-     * @param int   $parentId    The parent id.
-     * @param array $inverseList The reverse lookup list.
+     * @param int             $index       The index to look up.
+     * @param int             $parentId    The parent id.
+     * @param array<int, int> $inverseList The reverse lookup list.
      *
-     * @return int|null
-     *
-     * @throws \InvalidArgumentException When the parent page has not been mapped.
+     * @throws InvalidArgumentException When the parent page has not been mapped.
      */
     private function determineMapFor(int $index, int $parentId, array $inverseList): ?int
     {
         if (!isset($inverseList[$parentId])) {
-            throw new \InvalidArgumentException(
+            throw new InvalidArgumentException(
                 'Page id ' . $parentId . ' has not been mapped'
             );
         }
@@ -219,6 +192,6 @@ class PageMap implements MappingInterface
         // Lookup all children of parent page in main language.
         $mainSiblings = $this->database->getPagesByPidList([$inverseList[$parentId]]);
 
-        return isset($mainSiblings[$index]) ? (int) $mainSiblings[$index]['id'] : null;
+        return $mainSiblings[$index]['id'] ?? null;
     }
 }

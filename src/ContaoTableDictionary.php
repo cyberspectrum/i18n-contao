@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao;
 
@@ -29,69 +12,52 @@ use CyberSpectrum\I18N\Exception\NotSupportedException;
 use CyberSpectrum\I18N\TranslationValue\TranslationValueInterface;
 use CyberSpectrum\I18N\TranslationValue\WritableTranslationValueInterface;
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
+use Traversable;
 
-/**
- * This provides access to a Contao table.
- */
+use function array_slice;
+use function count;
+use function get_class;
+
+/** This provides access to a Contao table. */
 class ContaoTableDictionary implements WritableDictionaryInterface
 {
     use LoggerAwareTrait;
 
-    /**
-     * The table name.
-     *
-     * @var string
-     */
-    private $tableName;
+    /** The table name. */
+    private string $tableName;
 
-    /**
-     * The source language.
-     *
-     * @var string
-     */
-    private $sourceLanguage;
+    /** The source language. */
+    private string $sourceLanguage;
 
-    /**
-     * The target language.
-     *
-     * @var string
-     */
-    private $targetLanguage;
+    /** The target language. */
+    private string $targetLanguage;
 
-    /**
-     * Connection.
-     *
-     * @var Connection
-     */
-    private $connection;
+    /** Connection. */
+    private Connection $connection;
 
-    /**
-     * The page map.
-     *
-     * @var MappingInterface
-     */
-    private $idMap;
+    /** The page map. */
+    private MappingInterface $idMap;
 
     /**
      * The extractors.
      *
-     * @var ExtractorInterface[]
+     * @var array<string, ExtractorInterface>
      */
-    private $extractors = [];
+    private array $extractors = [];
 
     /**
      * Create a new instance.
      *
-     * @param string               $tableName      The table name.
-     * @param string               $sourceLanguage The source language.
-     * @param string               $targetLanguage The target language.
-     * @param Connection           $connection     The database connection.
-     * @param MappingInterface     $idMap          The page map.
-     * @param ExtractorInterface[] $extractors     The extractors.
+     * @param string                   $tableName      The table name.
+     * @param string                   $sourceLanguage The source language.
+     * @param string                   $targetLanguage The target language.
+     * @param Connection               $connection     The database connection.
+     * @param MappingInterface         $idMap          The page map.
+     * @param list<ExtractorInterface> $extractors     The extractors.
      *
-     * @throws \InvalidArgumentException When one of the passed extractors does not implement the interface.
+     * @throws InvalidArgumentException When one of the passed extractors does not implement the interface.
      */
     public function __construct(
         string $tableName,
@@ -106,19 +72,15 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         $this->targetLanguage = $targetLanguage;
         $this->connection     = $connection;
         $this->idMap          = $idMap;
-        $this->setLogger(new NullLogger());
         foreach ($extractors as $extractor) {
             if (!$extractor instanceof ExtractorInterface) {
-                throw new \InvalidArgumentException('Object is not an extractor ' . \get_class($extractor));
+                throw new InvalidArgumentException('Object is not an extractor ' . get_class($extractor));
             }
             $this->extractors[$extractor->name()] = $extractor;
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function keys(): \Traversable
+    public function keys(): Traversable
     {
         foreach ($this->idMap->sourceIds() as $sourceId) {
             if (!$this->idMap->hasTargetFor($sourceId)) {
@@ -131,15 +93,10 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         }
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws NotSupportedException When the key is in bad format or the extractor can not be found.
-     */
     public function get(string $key): TranslationValueInterface
     {
         $chunks = explode('.', $key);
-        if (\count($chunks) < 2) {
+        if (count($chunks) < 2) {
             throw new NotSupportedException(
                 $this,
                 'Key ' . $key . ' is in bad format (need: [id].[prop-name])'
@@ -157,16 +114,13 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         $sourceId = (int) $chunks[0];
         $targetId = $this->idMap->getTargetIdFor($sourceId);
 
-        return $this->createValueReader($sourceId, $targetId, $extractor, implode('.', \array_slice($chunks, 2)));
+        return $this->createValueReader($sourceId, $targetId, $extractor, implode('.', array_slice($chunks, 2)));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function has(string $key): bool
     {
         $chunks = explode('.', $key);
-        if (\count($chunks) < 2) {
+        if (count($chunks) < 2) {
             return false;
         }
 
@@ -178,27 +132,16 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         return $this->idMap->hasTargetFor((int) $chunks[0]);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getSourceLanguage(): string
     {
         return $this->sourceLanguage;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     public function getTargetLanguage(): string
     {
         return $this->targetLanguage;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws NotSupportedException Adding is not supported by this class.
-     */
     public function add(string $key): WritableTranslationValueInterface
     {
         throw new NotSupportedException(
@@ -207,11 +150,6 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         );
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws NotSupportedException Removing is not supported by this class.
-     */
     public function remove(string $key): void
     {
         throw new NotSupportedException(
@@ -220,15 +158,10 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         );
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @throws NotSupportedException When the key is in bad format or the extractor can not be found.
-     */
-    public function getWritable($key): WritableTranslationValueInterface
+    public function getWritable(string $key): WritableTranslationValueInterface
     {
         $chunks = explode('.', $key);
-        if (\count($chunks) < 2) {
+        if (count($chunks) < 2) {
             throw new NotSupportedException($this, 'Key ' . $key . ' is in bad format (need: [id].[prop-name])');
         }
 
@@ -240,14 +173,10 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         $sourceId = (int) $chunks[0];
         $targetId = $this->idMap->getTargetIdFor($sourceId);
 
-        return $this->createValueWriter($sourceId, $targetId, $extractor, implode('.', \array_slice($chunks, 2)));
+        return $this->createValueWriter($sourceId, $targetId, $extractor, implode('.', array_slice($chunks, 2)));
     }
 
-    /**
-     * Retrieve connection.
-     *
-     * @return Connection
-     */
+    /** Retrieve connection. */
     public function getConnection(): Connection
     {
         return $this->connection;
@@ -258,25 +187,33 @@ class ContaoTableDictionary implements WritableDictionaryInterface
      *
      * @param int $idNumber The id to fetch.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getRow(int $idNumber): array
     {
-        return (array) $this->getConnection()->createQueryBuilder()
+        $queryBuilder = $this->getConnection()->createQueryBuilder()
             ->select('*')
             ->from($this->tableName)
             ->where('id=:id')
             ->setParameter('id', $idNumber)
-            ->setMaxResults(1)
-            ->execute()
-            ->fetch(\PDO::FETCH_ASSOC);
+            ->setMaxResults(1);
+
+        $result = $this
+            ->connection
+            ->executeQuery($queryBuilder->getSQL(), $queryBuilder->getParameters(), $queryBuilder->getParameterTypes())
+            ->fetchAssociative();
+        if (!is_array($result)) {
+            throw new InvalidArgumentException('Failed to fetch row with id ' . $idNumber);
+        }
+
+        return $result;
     }
 
     /**
      * Fetch a row.
      *
-     * @param int   $idNumber The id to fetch.
-     * @param array $values   The row values to update.
+     * @param int                  $idNumber The id to fetch.
+     * @param array<string, mixed> $values   The row values to update.
      *
      * @return void
      */
@@ -290,11 +227,11 @@ class ContaoTableDictionary implements WritableDictionaryInterface
      *
      * @param int $sourceId The source id.
      *
-     * @return \Traversable|string[]
+     * @return Traversable<int, string>
      *
-     * @throws \InvalidArgumentException When the extractor is unknown.
+     * @throws InvalidArgumentException When the extractor is unknown.
      */
-    protected function getKeysForSource(int $sourceId): \Traversable
+    protected function getKeysForSource(int $sourceId): Traversable
     {
         $row = $this->getRow($sourceId);
         foreach ($this->extractors as $extractor) {
@@ -310,7 +247,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
                     }
                     break;
                 default:
-                    throw new \InvalidArgumentException('Unknown extractor type ' . \get_class($extractor));
+                    throw new InvalidArgumentException('Unknown extractor type ' . get_class($extractor));
             }
         }
     }
@@ -319,8 +256,6 @@ class ContaoTableDictionary implements WritableDictionaryInterface
      * Try to get the extractor for a property path.
      *
      * @param string $propName The property path.
-     *
-     * @return ExtractorInterface|null
      */
     protected function getExtractor(string $propName): ?ExtractorInterface
     {
