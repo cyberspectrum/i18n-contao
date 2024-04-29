@@ -71,12 +71,12 @@ class TranslationValue implements TranslationValueInterface
 
     public function isSourceEmpty(): bool
     {
-        return empty($this->getSource());
+        return !(bool) $this->getSource();
     }
 
     public function isTargetEmpty(): bool
     {
-        return empty($this->getTarget());
+        return !(bool) $this->getTarget();
     }
 
     /**

@@ -66,7 +66,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
         $this->extractorFactory = $extractorFactory;
         $this->mapBuilder       = $mapBuilder;
 
-        if (empty($dictionaryMeta)) {
+        if ([] === $dictionaryMeta || null === $dictionaryMeta) {
             $dictionaryMeta = [
                 'tl_page',
                 'tl_article',

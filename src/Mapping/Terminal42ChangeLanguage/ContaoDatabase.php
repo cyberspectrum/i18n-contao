@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\DBAL\Result;
@@ -67,7 +68,7 @@ class ContaoDatabase
             ->select('id', 'pid', 'languageMain', 'type')
             ->from('tl_page')
             ->where('pid IN (:lookupQueue)')
-            ->setParameter('lookupQueue', $pidList, Connection::PARAM_INT_ARRAY)
+            ->setParameter('lookupQueue', $pidList, ArrayParameterType::INTEGER)
             ->orderBy('sorting'));
         $result = [];
         while ($row = $rows->fetchAssociative()) {

@@ -9,10 +9,12 @@ use Traversable;
 
 use function array_key_exists;
 use function array_slice;
+use function assert;
 use function explode;
 use function get_class;
 use function implode;
 use function is_array;
+use function is_string;
 
 /**
  * This extracts numerical indexed arrays of values.
@@ -100,12 +102,17 @@ class ArrayExtractor implements MultiStringExtractorInterface
         /** @var mixed $content */
         $content = $arrayContent[$chunks[0]];
         $this->ensureArray($this->colName . '.' . $chunks[0], $content);
-
-        $extractor = $this->getExtractor($chunks[1]);
+        $extractorName = $chunks[1] ?? null;
+        assert(is_string($extractorName));
+        $extractor = $this->getExtractor($extractorName);
 
         switch (true) {
             case $extractor instanceof MultiStringExtractorInterface:
-                return $extractor->get($chunks[2], $content);
+                $subKey = ($chunks[2] ?? '');
+                if ('' === $subKey) {
+                    throw new InvalidArgumentException('Invalid path value');
+                }
+                return $extractor->get($subKey, $content);
             case $extractor instanceof StringExtractorInterface:
                 return $extractor->get($content);
             default:
@@ -114,6 +121,10 @@ class ArrayExtractor implements MultiStringExtractorInterface
         throw new InvalidArgumentException('Unknown extractor type ' . get_class($extractor));
     }
 
+    /**
+     * @psalm-suppress UnsupportedPropertyReferenceUsage
+     * @psalm-suppress UnsupportedReferenceUsage
+     */
     public function set(string $path, array &$row, ?string $value): void
     {
         if (!$this->supports($row)) {

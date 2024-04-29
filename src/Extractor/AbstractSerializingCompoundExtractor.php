@@ -25,7 +25,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
      *
      * @var array<string, ExtractorInterface>
      */
-    private $extractors = [];
+    private array $extractors = [];
 
     /**
      * @param string                   $colName       The column name.
@@ -144,7 +144,11 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
 
         switch (true) {
             case $extractor instanceof MultiStringExtractorInterface:
-                $extractor->set($chunks[1], $content, $value);
+                $subKey = ($chunks[1] ?? '');
+                if ('' === $subKey) {
+                    throw new InvalidArgumentException('Invalid path value');
+                }
+                $extractor->set($subKey, $content, $value);
                 break;
             case $extractor instanceof StringExtractorInterface:
                 if (1 < count($chunks)) {

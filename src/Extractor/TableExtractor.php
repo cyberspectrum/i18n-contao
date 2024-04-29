@@ -61,7 +61,7 @@ class TableExtractor implements MultiStringExtractorInterface
         }
         [$rowIndex, $colIndex] = $this->extractPath($path);
 
-        if ($value = ($content[$rowIndex][$colIndex] ?? null)) {
+        if ((bool) ($value = ($content[$rowIndex][$colIndex] ?? null))) {
             return $value;
         }
 
