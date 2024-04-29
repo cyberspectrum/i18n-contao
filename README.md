@@ -5,3 +5,5 @@
 [![Latest Version on Packagist](http://img.shields.io/packagist/v/cyberspectrum/i18n-contao.svg)](https://packagist.org/packages/cyberspectrum/i18n-contao)
 
 This library provides contao dictionary support.
+
+NOTE: this only needs access to the Contao database, it does NOT need the Contao codebase to be installed.
