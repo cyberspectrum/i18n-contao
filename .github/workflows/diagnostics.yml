@@ -30,6 +30,9 @@ jobs:
             phpcq_install: 'update'
             phpcq_flags: ''
             composer_install: 'update'
+          - php: '8.4'
+            phpcq_install: 'update'
+            composer_install: 'update'
 
     steps:
       - name: PHP ${{ matrix.php }} Pull source
