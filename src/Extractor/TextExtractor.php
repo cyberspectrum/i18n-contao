@@ -22,16 +22,19 @@ class TextExtractor implements StringExtractorInterface
         $this->colName = $colName;
     }
 
+    #[\Override]
     public function name(): string
     {
         return $this->colName;
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         return array_key_exists($this->colName, $row);
     }
 
+    #[\Override]
     public function get(array $row): ?string
     {
         $value = $row[$this->colName] ?? null;
@@ -42,6 +45,7 @@ class TextExtractor implements StringExtractorInterface
         return $value;
     }
 
+    #[\Override]
     public function set(array &$row, ?string $value): void
     {
         $row[$this->colName] = $value;

@@ -67,6 +67,7 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
      *
      * @throws InvalidArgumentException When the table is unknown.
      */
+    #[\Override]
     public function getMappingFor(string $tables, string $sourceLanguage, string $targetLanguage): MappingInterface
     {
         switch ($tables) {
@@ -84,6 +85,7 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function supports(string $tablePath, string $sourceLanguage, string $targetLanguage): bool
     {
         return in_array($tablePath, ['tl_page', 'tl_article', 'tl_article.tl_content'])
@@ -94,6 +96,7 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function getSupportedLanguages(): array
     {
         if (null === $this->supportedLanguages) {

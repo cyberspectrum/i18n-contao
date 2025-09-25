@@ -28,16 +28,19 @@ class TableExtractor implements MultiStringExtractorInterface
         $this->colName = $colName;
     }
 
+    #[\Override]
     public function name(): string
     {
         return $this->colName;
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         return null !== $this->decode($row);
     }
 
+    #[\Override]
     public function keys(array $row): Traversable
     {
         if (null === $content = $this->decode($row)) {
@@ -54,6 +57,7 @@ class TableExtractor implements MultiStringExtractorInterface
         }
     }
 
+    #[\Override]
     public function get(string $path, array $row): ?string
     {
         if (null === $content = $this->decode($row)) {
@@ -68,6 +72,7 @@ class TableExtractor implements MultiStringExtractorInterface
         return null;
     }
 
+    #[\Override]
     public function set(string $path, array &$row, ?string $value): void
     {
         if (null === $content = $this->decode($row)) {

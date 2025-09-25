@@ -29,6 +29,7 @@ class WhitelistCondition implements ConditionInterface
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     public function evaluate(array $row): bool
     {
         foreach ($this->conditions as $condition) {

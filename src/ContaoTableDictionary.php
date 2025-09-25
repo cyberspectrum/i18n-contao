@@ -80,6 +80,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         }
     }
 
+    #[\Override]
     public function keys(): Traversable
     {
         foreach ($this->idMap->sourceIds() as $sourceId) {
@@ -93,6 +94,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         }
     }
 
+    #[\Override]
     public function get(string $key): TranslationValueInterface
     {
         $chunks = explode('.', $key);
@@ -117,6 +119,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         return $this->createValueReader($sourceId, $targetId, $extractor, implode('.', array_slice($chunks, 2)));
     }
 
+    #[\Override]
     public function has(string $key): bool
     {
         $chunks = explode('.', $key);
@@ -132,16 +135,19 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         return $this->idMap->hasTargetFor((int) $chunks[0]);
     }
 
+    #[\Override]
     public function getSourceLanguage(): string
     {
         return $this->sourceLanguage;
     }
 
+    #[\Override]
     public function getTargetLanguage(): string
     {
         return $this->targetLanguage;
     }
 
+    #[\Override]
     public function add(string $key): WritableTranslationValueInterface
     {
         throw new NotSupportedException(
@@ -150,6 +156,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         );
     }
 
+    #[\Override]
     public function remove(string $key): void
     {
         throw new NotSupportedException(
@@ -158,6 +165,7 @@ class ContaoTableDictionary implements WritableDictionaryInterface
         );
     }
 
+    #[\Override]
     public function getWritable(string $key): WritableTranslationValueInterface
     {
         $chunks = explode('.', $key);

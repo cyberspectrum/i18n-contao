@@ -84,6 +84,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
         }
     }
 
+    #[\Override]
     public function getAvailableDictionaries(): Traversable
     {
         yield from $this->getAvailableDictionaryInformation();
@@ -94,6 +95,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      *
      * @throws DictionaryNotFoundException When the dictionary does not exist.
      */
+    #[\Override]
     public function getDictionary(
         string $name,
         string $sourceLanguage,
@@ -135,6 +137,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
         throw new DictionaryNotFoundException($name, $sourceLanguage, $targetLanguage);
     }
 
+    #[\Override]
     public function getAvailableWritableDictionaries(): Traversable
     {
         yield from $this->getAvailableDictionaryInformation();
@@ -145,6 +148,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      *
      * @throws DictionaryNotFoundException When the dictionary does not exist.
      */
+    #[\Override]
     public function getDictionaryForWrite(
         string $name,
         string $sourceLanguage,
@@ -189,6 +193,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      *
      * @throws InvalidArgumentException Creating dictionaries is not supported by this class.
      */
+    #[\Override]
     public function createDictionary(
         string $name,
         string $sourceLanguage,

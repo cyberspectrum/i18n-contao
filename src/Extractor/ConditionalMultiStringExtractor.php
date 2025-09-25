@@ -22,26 +22,31 @@ class ConditionalMultiStringExtractor extends AbstractConditionalExtractor imple
         $this->delegate = $delegate;
     }
 
+    #[\Override]
     public function name(): string
     {
         return $this->delegate->name();
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         return parent::supports($row) && $this->delegate->supports($row);
     }
 
+    #[\Override]
     public function keys(array $row): Traversable
     {
         return $this->delegate->keys($row);
     }
 
+    #[\Override]
     public function get(string $path, array $row): ?string
     {
         return $this->delegate->get($path, $row);
     }
 
+    #[\Override]
     public function set(string $path, array &$row, ?string $value): void
     {
         $this->delegate->set($path, $row, $value);

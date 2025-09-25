@@ -43,16 +43,19 @@ class ArrayExtractor implements MultiStringExtractorInterface
         }
     }
 
+    #[\Override]
     public function name(): string
     {
         return $this->colName;
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         return (!array_key_exists($this->colName, $row) || is_array($row[$this->colName]));
     }
 
+    #[\Override]
     public function keys(array $row): Traversable
     {
         if (!$this->supports($row)) {
@@ -87,6 +90,7 @@ class ArrayExtractor implements MultiStringExtractorInterface
         }
     }
 
+    #[\Override]
     public function get(string $path, array $row): ?string
     {
         if (!$this->supports($row)) {
@@ -125,6 +129,7 @@ class ArrayExtractor implements MultiStringExtractorInterface
      * @psalm-suppress UnsupportedPropertyReferenceUsage
      * @psalm-suppress UnsupportedReferenceUsage
      */
+    #[\Override]
     public function set(string $path, array &$row, ?string $value): void
     {
         if (!$this->supports($row)) {

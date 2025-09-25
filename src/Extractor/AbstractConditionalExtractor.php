@@ -14,11 +14,13 @@ abstract class AbstractConditionalExtractor implements ExtractorInterface, Condi
     /** The condition to test. */
     private ConditionInterface $condition;
 
+    #[\Override]
     public function setCondition(ConditionInterface $condition): void
     {
         $this->condition = $condition;
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         return $this->condition->evaluate($row);

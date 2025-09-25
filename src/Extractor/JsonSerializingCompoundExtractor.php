@@ -13,6 +13,7 @@ use function json_encode;
  */
 class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {
+    #[\Override]
     protected function decode(string $value): array
     {
         /** @var mixed $content */
@@ -25,6 +26,7 @@ class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtrac
         return [];
     }
 
+    #[\Override]
     protected function encode(array $value): string
     {
         return json_encode($value, JSON_FORCE_OBJECT);

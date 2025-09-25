@@ -39,11 +39,13 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
         }
     }
 
+    #[\Override]
     public function name(): string
     {
         return $this->colName;
     }
 
+    #[\Override]
     public function supports(array $row): bool
     {
         if (!array_key_exists($this->colName, $row)) {
@@ -62,6 +64,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
         return true;
     }
 
+    #[\Override]
     public function keys(array $row): Traversable
     {
         if (!array_key_exists($this->colName, $row) || (null === $row[$this->colName])) {
@@ -94,6 +97,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
      *
      * @throws InvalidArgumentException When the extractor can not be found.
      */
+    #[\Override]
     public function get(string $path, array $row): ?string
     {
         if (!array_key_exists($this->colName, $row) || (null === $row[$this->colName])) {
@@ -128,6 +132,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
      *
      * @throws InvalidArgumentException When the extractor can not be found.
      */
+    #[\Override]
     public function set(string $path, array &$row, ?string $value): void
     {
         if (!array_key_exists($this->colName, $row) || (null === $row[$this->colName])) {

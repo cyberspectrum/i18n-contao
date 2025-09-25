@@ -29,6 +29,7 @@ class ExpressionLanguageCondition implements ConditionInterface
         $this->expressionLanguage = $expressionLanguage;
     }
 
+    #[\Override]
     public function evaluate(array $row): bool
     {
         return (bool) $this->expressionLanguage->evaluate($this->expression, ['row' => (object) $row]);

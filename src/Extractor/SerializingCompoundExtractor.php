@@ -13,6 +13,7 @@ use function unserialize;
  */
 class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {
+    #[\Override]
     protected function decode(string $value): array
     {
         /** @var mixed $content */
@@ -28,6 +29,7 @@ class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
     /**
      * {@inheritDoc}
      */
+    #[\Override]
     protected function encode(array $value): string
     {
         return serialize($value);

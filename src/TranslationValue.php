@@ -54,26 +54,31 @@ class TranslationValue implements TranslationValueInterface
         $this->trail      = $trail;
     }
 
+    #[\Override]
     public function getKey(): string
     {
         return $this->sourceId . '.' . $this->extractor->name();
     }
 
+    #[\Override]
     public function getSource(): ?string
     {
         return $this->getValue($this->getSourceRow());
     }
 
+    #[\Override]
     public function getTarget(): ?string
     {
         return $this->getValue($this->getTargetRow());
     }
 
+    #[\Override]
     public function isSourceEmpty(): bool
     {
         return !(bool) $this->getSource();
     }
 
+    #[\Override]
     public function isTargetEmpty(): bool
     {
         return !(bool) $this->getTarget();

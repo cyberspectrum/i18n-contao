@@ -14,6 +14,7 @@ use function get_class;
 /** This is the Contao translation value writer. */
 class WritableTranslationValue extends TranslationValue implements WritableTranslationValueInterface
 {
+    #[\Override]
     public function setSource(string $value): void
     {
         $row = $this->getSourceRow();
@@ -21,6 +22,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
         $this->dictionary->updateRow($this->sourceId, $row);
     }
 
+    #[\Override]
     public function setTarget(string $value): void
     {
         $row = $this->getTargetRow();
@@ -28,6 +30,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
         $this->dictionary->updateRow($this->targetId, $row);
     }
 
+    #[\Override]
     public function clearSource(): void
     {
         $row = $this->getSourceRow();
@@ -35,6 +38,7 @@ class WritableTranslationValue extends TranslationValue implements WritableTrans
         $this->dictionary->updateRow($this->sourceId, $row);
     }
 
+    #[\Override]
     public function clearTarget(): void
     {
         $row = $this->getTargetRow();
