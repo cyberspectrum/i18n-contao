@@ -185,7 +185,7 @@ final class PageMap implements MappingInterface
     {
         if (!isset($inverseList[$parentId])) {
             throw new InvalidArgumentException(
-                'Page id ' . $parentId . ' has not been mapped'
+                'Page id ' . (string) $parentId . ' has not been mapped'
             );
         }
 

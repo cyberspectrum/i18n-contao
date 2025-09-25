@@ -57,7 +57,7 @@ class TranslationValue implements TranslationValueInterface
     #[\Override]
     public function getKey(): string
     {
-        return $this->sourceId . '.' . $this->extractor->name();
+        return (string) $this->sourceId . '.' . $this->extractor->name();
     }
 
     #[\Override]

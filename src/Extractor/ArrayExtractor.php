@@ -74,7 +74,7 @@ final class ArrayExtractor implements MultiStringExtractorInterface
             /** @var array<string, mixed> $item */
             foreach ($this->extractors as $key => $extractor) {
                 if (array_key_exists($key, $item)) {
-                    $prefix = $arrayKey . '.' . $key;
+                    $prefix = (string) $arrayKey . '.' . $key;
                     switch (true) {
                         case $extractor instanceof MultiStringExtractorInterface:
                             foreach ($extractor->keys($item) as $subKey) {

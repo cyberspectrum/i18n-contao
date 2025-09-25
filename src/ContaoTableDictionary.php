@@ -89,7 +89,7 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
             }
 
             foreach ($this->getKeysForSource($sourceId) as $propKey) {
-                yield $sourceId . '.' . $propKey;
+                yield (string) $sourceId . '.' . $propKey;
             }
         }
     }
@@ -211,7 +211,7 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
             ->executeQuery($queryBuilder->getSQL(), $queryBuilder->getParameters(), $queryBuilder->getParameterTypes())
             ->fetchAssociative();
         if (!is_array($result)) {
-            throw new InvalidArgumentException('Failed to fetch row with id ' . $idNumber);
+            throw new InvalidArgumentException('Failed to fetch row with id ' . (string) $idNumber);
         }
 
         return $result;

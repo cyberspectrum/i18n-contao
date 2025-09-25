@@ -54,7 +54,7 @@ final class TableExtractor implements MultiStringExtractorInterface
                 if (null === $colValue) {
                     continue;
                 }
-                yield 'row' . $rowIndex . '.col' . $col;
+                yield 'row' . (string) $rowIndex . '.col' . (string) $col;
             }
         }
     }

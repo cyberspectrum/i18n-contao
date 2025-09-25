@@ -60,7 +60,7 @@ final class ArticleMap implements MappingInterface
      */
     private function fetchArticlesFrom(int $pageId, array &$map, int $mainPage): void
     {
-        $this->logger->debug('Mapping articles from page ' . $pageId);
+        $this->logger->debug('Mapping articles from page ' . (string) $pageId);
 
         $articles = $this->database->getArticlesByPid($pageId);
 
