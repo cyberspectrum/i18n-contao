@@ -14,7 +14,7 @@ use RuntimeException;
  *
  * @api
  */
-class ExtractorFactory
+final class ExtractorFactory
 {
     use LoggerAwareTrait;
 

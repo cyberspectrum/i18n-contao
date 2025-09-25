@@ -20,7 +20,7 @@ use function unserialize;
  *
  * @api
  */
-class TableExtractor implements MultiStringExtractorInterface
+final class TableExtractor implements MultiStringExtractorInterface
 {
     /** The column name. */
     private string $colName;

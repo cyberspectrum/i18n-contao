@@ -13,7 +13,7 @@ use function unserialize;
  *
  * @api
  */
-class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
+final class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {
     #[\Override]
     protected function decode(string $value): array

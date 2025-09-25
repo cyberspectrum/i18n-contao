@@ -19,7 +19,7 @@ use InvalidArgumentException;
  *
  * @api
  */
-class ContaoDictionaryDefinitionBuilder implements DefinitionBuilderInterface
+final class ContaoDictionaryDefinitionBuilder implements DefinitionBuilderInterface
 {
     /**
      * {@inheritDoc}

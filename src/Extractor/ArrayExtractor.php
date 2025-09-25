@@ -21,7 +21,7 @@ use function is_string;
  *
  * @api
  */
-class ArrayExtractor implements MultiStringExtractorInterface
+final class ArrayExtractor implements MultiStringExtractorInterface
 {
     /** The column name. */
     private string $colName;

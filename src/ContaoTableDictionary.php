@@ -21,7 +21,7 @@ use function count;
 use function get_class;
 
 /** This provides access to a Contao table. */
-class ContaoTableDictionary implements WritableDictionaryInterface
+final class ContaoTableDictionary implements WritableDictionaryInterface
 {
     use LoggerAwareTrait;
 

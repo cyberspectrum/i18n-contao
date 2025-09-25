@@ -13,7 +13,7 @@ use function json_encode;
  *
  * @api
  */
-class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
+final class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {
     #[\Override]
     protected function decode(string $value): array

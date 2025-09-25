@@ -12,7 +12,7 @@ use RuntimeException;
 /**
  * This maps page ids between a source language and a target language.
  */
-class PageMap implements MappingInterface
+final class PageMap implements MappingInterface
 {
     use MapTrait;
 

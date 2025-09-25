@@ -12,7 +12,7 @@ use function in_array;
 /**
  * This maps page ids between a source language and a target language.
  */
-class ArticleMap implements MappingInterface
+final class ArticleMap implements MappingInterface
 {
     use MapTrait;
 

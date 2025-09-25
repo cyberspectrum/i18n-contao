@@ -11,7 +11,7 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
  *
  * @api
  */
-class ExpressionLanguageCondition implements ConditionInterface
+final class ExpressionLanguageCondition implements ConditionInterface
 {
     /** The expression to evaluate. */
     private string $expression;

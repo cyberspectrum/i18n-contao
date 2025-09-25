@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 /**
  * This maps article content element ids between a source language and a target language.
  */
-class ArticleContentMap implements MappingInterface
+final class ArticleContentMap implements MappingInterface
 {
     use MapTrait;
 

@@ -31,6 +31,7 @@
     "symfony/expression-language": "^5.4 || ^6.0 || ^7.0"
   },
   "require-dev": {
+    "dg/bypass-finals": "^1.9",
     "phpcq/runner-bootstrap": "^1.0@dev",
     "symfony/error-handler": "^5.4 || ^6.0 || ^7.0"
   },
@@ -46,6 +47,9 @@
     "psr-4": {
       "CyberSpectrum\\I18N\\Contao\\Test\\": "tests"
     }
+  },
+  "config": {
+    "sort-packages": true
   },
   "extra": {
     "branch-alias": {

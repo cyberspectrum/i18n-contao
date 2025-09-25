@@ -9,7 +9,7 @@ namespace CyberSpectrum\I18N\Contao\Extractor\Condition;
  *
  * @api
  */
-class WhitelistCondition implements ConditionInterface
+final class WhitelistCondition implements ConditionInterface
 {
     /**
      * The expression to evaluate.

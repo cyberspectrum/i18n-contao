@@ -11,7 +11,8 @@ use Traversable;
  *
  * @api
  */
-class ConditionalMultiStringExtractor extends AbstractConditionalExtractor implements MultiStringExtractorInterface
+final class ConditionalMultiStringExtractor extends AbstractConditionalExtractor implements
+    MultiStringExtractorInterface
 {
     /** The delegator. */
     private MultiStringExtractorInterface $delegate;

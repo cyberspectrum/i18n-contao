@@ -12,7 +12,7 @@ use InvalidArgumentException;
 use function get_class;
 
 /** This is the Contao translation value writer. */
-class WritableTranslationValue extends TranslationValue implements WritableTranslationValueInterface
+final class WritableTranslationValue extends TranslationValue implements WritableTranslationValueInterface
 {
     #[\Override]
     public function setSource(string $value): void

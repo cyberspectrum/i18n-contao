@@ -9,7 +9,7 @@ namespace CyberSpectrum\I18N\Contao\Extractor;
  *
  * @api
  */
-class ConditionalStringExtractor extends AbstractConditionalExtractor implements StringExtractorInterface
+final class ConditionalStringExtractor extends AbstractConditionalExtractor implements StringExtractorInterface
 {
     /** The delegator. */
     private StringExtractorInterface $delegate;

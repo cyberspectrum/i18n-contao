@@ -28,7 +28,7 @@ use function is_string;
  *
  * @api
  */
-class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
+final class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
 {
     use LoggerAwareTrait;
 

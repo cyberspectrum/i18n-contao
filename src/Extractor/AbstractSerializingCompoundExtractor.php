@@ -29,7 +29,7 @@ abstract class AbstractSerializingCompoundExtractor implements MultiStringExtrac
      * @param string                   $colName       The column name.
      * @param list<ExtractorInterface> $subExtractors The sub extractors.
      */
-    public function __construct(string $colName, array $subExtractors)
+    final public function __construct(string $colName, array $subExtractors)
     {
         $this->colName = $colName;
         foreach ($subExtractors as $extractor) {

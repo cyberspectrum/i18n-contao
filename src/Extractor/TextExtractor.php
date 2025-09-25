@@ -11,7 +11,7 @@ use InvalidArgumentException;
  *
  * @api
  */
-class TextExtractor implements StringExtractorInterface
+final class TextExtractor implements StringExtractorInterface
 {
     /** The column name. */
     private string $colName;
