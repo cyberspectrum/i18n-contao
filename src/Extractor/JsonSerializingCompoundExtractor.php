@@ -19,7 +19,7 @@ final class JsonSerializingCompoundExtractor extends AbstractSerializingCompound
     protected function decode(string $value): array
     {
         /** @var mixed $content */
-        $content = json_decode($value, true);
+        $content = json_decode($value, true, flags: JSON_THROW_ON_ERROR);
 
         if (is_array($content)) {
             /** @var array<string, mixed> $content */
@@ -31,6 +31,6 @@ final class JsonSerializingCompoundExtractor extends AbstractSerializingCompound
     #[\Override]
     protected function encode(array $value): string
     {
-        return json_encode($value, JSON_FORCE_OBJECT);
+        return json_encode($value, JSON_FORCE_OBJECT | JSON_THROW_ON_ERROR);
     }
 }
