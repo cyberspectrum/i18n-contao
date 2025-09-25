@@ -18,6 +18,8 @@ use function is_string;
 
 /**
  * This extracts numerical indexed arrays of values.
+ *
+ * @api
  */
 class ArrayExtractor implements MultiStringExtractorInterface
 {

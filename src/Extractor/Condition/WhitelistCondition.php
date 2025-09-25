@@ -6,6 +6,8 @@ namespace CyberSpectrum\I18N\Contao\Extractor\Condition;
 
 /**
  * This multiple conditions for the passed row and returns true on the first success.
+ *
+ * @api
  */
 class WhitelistCondition implements ConditionInterface
 {

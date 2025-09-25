@@ -11,6 +11,8 @@ use Doctrine\DBAL\Result;
 
 /**
  * This provides access to the Contao database.
+ *
+ * @api
  */
 class ContaoDatabase
 {

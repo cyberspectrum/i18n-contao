@@ -25,6 +25,8 @@ use function is_string;
  *
  * @psalm-type TContaoDictionaryMetaDataInput=array{name: string, table: string, map: string}|string
  * @psalm-type TContaoDictionaryMetaData=array{table: string, map: string}
+ *
+ * @api
  */
 class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
 {

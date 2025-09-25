@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * This extracts text from a database row.
+ *
+ * @api
  */
 class TextExtractor implements StringExtractorInterface
 {

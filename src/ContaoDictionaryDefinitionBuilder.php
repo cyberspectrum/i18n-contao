@@ -16,6 +16,8 @@ use InvalidArgumentException;
  * @psalm-type TContaoDictionaryDefinitionConfigurationArray=array{
  *   name: string
  * }
+ *
+ * @api
  */
 class ContaoDictionaryDefinitionBuilder implements DefinitionBuilderInterface
 {

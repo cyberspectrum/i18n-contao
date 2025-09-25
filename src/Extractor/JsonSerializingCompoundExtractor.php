@@ -10,6 +10,8 @@ use function json_encode;
 
 /**
  * This extracts from a json serialized field.
+ *
+ * @api
  */
 class JsonSerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {

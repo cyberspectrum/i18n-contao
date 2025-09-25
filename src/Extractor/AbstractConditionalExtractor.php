@@ -6,9 +6,7 @@ namespace CyberSpectrum\I18N\Contao\Extractor;
 
 use CyberSpectrum\I18N\Contao\Extractor\Condition\ConditionInterface;
 
-/**
- * This checks a condition.
- */
+/** This checks a condition. */
 abstract class AbstractConditionalExtractor implements ExtractorInterface, ConditionalExtractorInterface
 {
     /** The condition to test. */

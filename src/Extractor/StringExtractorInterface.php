@@ -8,6 +8,8 @@ use InvalidArgumentException;
 
 /**
  * This interface describes a string value extractor.
+ *
+ * @api
  */
 interface StringExtractorInterface extends ExtractorInterface
 {

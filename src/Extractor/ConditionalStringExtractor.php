@@ -6,6 +6,8 @@ namespace CyberSpectrum\I18N\Contao\Extractor;
 
 /**
  * This extracts string content if a condition matches.
+ *
+ * @api
  */
 class ConditionalStringExtractor extends AbstractConditionalExtractor implements StringExtractorInterface
 {

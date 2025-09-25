@@ -12,9 +12,7 @@ use function get_class;
 use function is_array;
 use function strlen;
 
-/**
- * This helps extracting from serialized fields.
- */
+/** This helps extracting from serialized fields. */
 abstract class AbstractSerializingCompoundExtractor implements MultiStringExtractorInterface
 {
     /** The column name. */

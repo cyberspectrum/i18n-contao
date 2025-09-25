@@ -17,6 +17,8 @@ use function unserialize;
 
 /**
  * This extracts table values.
+ *
+ * @api
  */
 class TableExtractor implements MultiStringExtractorInterface
 {

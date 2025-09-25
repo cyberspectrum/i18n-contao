@@ -6,6 +6,8 @@ namespace CyberSpectrum\I18N\Contao\Mapping;
 
 /**
  * This interface describes an id mapper for Contao.
+ *
+ * @api
  */
 interface MapBuilderInterface
 {

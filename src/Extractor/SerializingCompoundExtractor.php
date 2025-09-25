@@ -10,6 +10,8 @@ use function unserialize;
 
 /**
  * This extracts from a serialized field.
+ *
+ * @api
  */
 class SerializingCompoundExtractor extends AbstractSerializingCompoundExtractor
 {

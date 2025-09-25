@@ -11,6 +11,8 @@ use RuntimeException;
 
 /**
  * This provides the Contao extractors.
+ *
+ * @api
  */
 class ExtractorFactory
 {

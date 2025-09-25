@@ -6,6 +6,8 @@ namespace CyberSpectrum\I18N\Contao\Extractor;
 
 /**
  * This interface describes a value extractor.
+ *
+ * @api
  */
 interface ExtractorInterface
 {

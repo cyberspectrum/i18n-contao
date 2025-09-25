@@ -8,6 +8,8 @@ use Symfony\Component\ExpressionLanguage\ExpressionLanguage;
 
 /**
  * This executes the expression language for the passed row.
+ *
+ * @api
  */
 class ExpressionLanguageCondition implements ConditionInterface
 {

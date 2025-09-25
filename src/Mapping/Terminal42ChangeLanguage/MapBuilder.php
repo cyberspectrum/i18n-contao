@@ -16,6 +16,8 @@ use function in_array;
 
 /**
  * This provides the table mappings when using changelanguage by terminal42.
+ *
+ * @api
  */
 class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
 {

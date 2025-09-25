@@ -9,6 +9,8 @@ use Traversable;
 
 /**
  * This interface describes a value extractor.
+ *
+ * @api
  */
 interface MultiStringExtractorInterface extends ExtractorInterface
 {

@@ -8,6 +8,8 @@ use CyberSpectrum\I18N\Contao\Extractor\Condition\ConditionInterface;
 
 /**
  * This interface describes a value extractor.
+ *
+ * @api
  */
 interface ConditionalExtractorInterface extends ExtractorInterface
 {

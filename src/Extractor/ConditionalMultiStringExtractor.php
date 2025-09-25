@@ -8,6 +8,8 @@ use Traversable;
 
 /**
  * This extracts content if a condition matches.
+ *
+ * @api
  */
 class ConditionalMultiStringExtractor extends AbstractConditionalExtractor implements MultiStringExtractorInterface
 {

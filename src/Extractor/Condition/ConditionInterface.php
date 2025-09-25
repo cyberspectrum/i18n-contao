@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Extractor\Condition;
 
-/** This interface describes a condition to be met. */
+/**
+ * This interface describes a condition to be met.
+ *
+ * @api
+ */
 interface ConditionInterface
 {
     /**

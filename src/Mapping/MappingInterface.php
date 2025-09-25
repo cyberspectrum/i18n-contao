@@ -9,6 +9,8 @@ use Traversable;
 
 /**
  * This interface describes an id mapper for Contao.
+ *
+ * @api
  */
 interface MappingInterface
 {
