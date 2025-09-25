@@ -10,4 +10,12 @@
     <projectFiles>
         <directory name="src" />
     </projectFiles>
+    <issueHandlers>
+        <PossiblyUnusedMethod>
+            <errorLevel type="suppress">
+                <!-- This is final and used by child classes that are not part of the public API. -->
+                <referencedMethod name="CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor::__construct"/>
+            </errorLevel>
+        </PossiblyUnusedMethod>
+    </issueHandlers>
 </psalm>
