@@ -97,17 +97,7 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         }
         if (array_key_exists($name, $this->dictionaryMeta)) {
             $metaData   = $this->dictionaryMeta[$name];
-            $dictionary = new ContaoTableDictionary(
-                $metaData['table'],
-                $sourceLanguage,
-                $targetLanguage,
-                $this->connection,
-                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
-                $this->extractorFactory->getExtractorsForTable($metaData['table'])
-            );
-            if ($this->logger) {
-                $dictionary->setLogger($this->logger);
-            }
+            $dictionary = $this->getContaoDictionaryForMeta($metaData, $sourceLanguage, $targetLanguage);
 
             return $dictionary;
         }
@@ -149,20 +139,7 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
             $this->logger->debug('Contao: opening writable dictionary ' . $name);
         }
         if (array_key_exists($name, $this->dictionaryMeta)) {
-            $metaData   = $this->dictionaryMeta[$name];
-            $dictionary = new ContaoTableDictionary(
-                $metaData['table'],
-                $sourceLanguage,
-                $targetLanguage,
-                $this->connection,
-                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
-                $this->extractorFactory->getExtractorsForTable($metaData['table'])
-            );
-            if ($this->logger) {
-                $dictionary->setLogger($this->logger);
-            }
-
-            return $dictionary;
+            return $this->getContaoDictionaryForMeta($this->dictionaryMeta[$name], $sourceLanguage, $targetLanguage);
         }
         if (self::ALL_TABLES === $name) {
             $dictionary = new WritableCompoundDictionary($sourceLanguage, $targetLanguage);
@@ -290,5 +267,24 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
             throw new InvalidArgumentException('Map name must be a string.');
         }
     }
+
+    /** @param TContaoDictionaryMetaData $metaData */
+    private function getContaoDictionaryForMeta(
+        array $metaData,
+        string $sourceLanguage,
+        string $targetLanguage
+    ): WritableDictionaryInterface {
+        $dictionary = new ContaoTableDictionary(
+            $metaData['table'],
+            $sourceLanguage,
+            $targetLanguage,
+            $this->connection,
+            $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
+            $this->extractorFactory->getExtractorsForTable($metaData['table'])
+        );
+        if ($this->logger) {
+            $dictionary->setLogger($this->logger);
+        }
+        return $dictionary;
     }
 }
