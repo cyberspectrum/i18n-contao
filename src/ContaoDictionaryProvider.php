@@ -34,21 +34,12 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
 
     public const ALL_TABLES = 'contao';
 
-    /** Connection */
-    private Connection $connection;
-
-    /** The extractor factory. */
-    private ExtractorFactory $extractorFactory;
-
-    /** The mapping builder. */
-    private MapBuilderInterface $mapBuilder;
-
     /**
      * The meta information.
      *
      * @var array<string, TContaoDictionaryMetaData>
      */
-    private array $dictionaryMeta = [];
+    private readonly array $dictionaryMeta;
 
     /**
      * Create a new instance.
@@ -59,15 +50,11 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
      * @param list<TContaoDictionaryMetaDataInput>|null $dictionaryMeta   The dictionary meta information.
      */
     public function __construct(
-        Connection $connection,
-        ExtractorFactory $extractorFactory,
-        MapBuilderInterface $mapBuilder,
+        private readonly Connection $connection,
+        private readonly ExtractorFactory $extractorFactory,
+        private readonly MapBuilderInterface $mapBuilder,
         ?array $dictionaryMeta
     ) {
-        $this->connection       = $connection;
-        $this->extractorFactory = $extractorFactory;
-        $this->mapBuilder       = $mapBuilder;
-
         if ([] === $dictionaryMeta || null === $dictionaryMeta) {
             $dictionaryMeta = [
                 'tl_page',
@@ -79,11 +66,12 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
                 ]
             ];
         }
-        $this->checkMeta($dictionaryMeta);
 
-        foreach ($dictionaryMeta as $item) {
-            $this->addDictionaryMeta($item);
+        $mappedDictionaries = [];
+        foreach ($this->mapDictionaryMeta($dictionaryMeta) as $name => $item) {
+            $mappedDictionaries[$name] = $item;
         }
+        $this->dictionaryMeta = $mappedDictionaries;
     }
 
     #[\Override]
@@ -206,41 +194,6 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
     }
 
     /**
-     * Add a dictionary meta information.
-     *
-     * @param array|string $item The meta array or table name if name, table and map are all the same.
-     */
-    public function addDictionaryMeta($item): void
-    {
-        if (is_string($item)) {
-            $item = [
-                'name'  => $item,
-                'table' => $item,
-                'map'   => $item,
-            ];
-        }
-
-        $name = $item['name'] ?? null;
-        if (!is_string($name)) {
-            throw new InvalidArgumentException('Name must be a string.');
-        }
-
-        $table = $item['table'] ?? $name;
-        if (!is_string($table)) {
-            throw new InvalidArgumentException('Table name must be a string.');
-        }
-        $map = $item['map'] ?? $name;
-        if (!is_string($map)) {
-            throw new InvalidArgumentException('Map name must be a string.');
-        }
-
-        $this->dictionaryMeta[$name] = [
-            'table' => $table,
-            'map'   => $map,
-        ];
-    }
-
-    /**
      * Obtain all dictionary information.
      *
      * @return Traversable<int, DictionaryInformation>
@@ -286,28 +239,56 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         return $languages;
     }
 
-    /** @psalm-assert list<TContaoDictionaryMetaDataInput|string> $dictionaryMeta */
-    private function checkMeta(array $dictionaryMeta): void
+    /** @return iterable<string, TContaoDictionaryMetaData> */
+    private function mapDictionaryMeta(array $dictionaryMeta): iterable
     {
-        /** @var mixed $item */
         foreach ($dictionaryMeta as $item) {
+            $this->checkMetaEntry($item);
             if (is_string($item)) {
+                yield $item => [
+                    'table' => $item,
+                    'map'   => $item,
+                ];
                 continue;
             }
-            if (is_array($item)) {
-                if (!is_string($name = $item['name'] ?? null)) {
-                    throw new InvalidArgumentException('Name must be present and a string.');
-                }
-                if (!is_string($item['table'] ?? $name)) {
-                    throw new InvalidArgumentException('Table name must be a string.');
-                }
-                if (!is_string($item['map'] ?? $name)) {
-                    throw new InvalidArgumentException('Map name must be a string.');
-                }
-                return;
+            $name = $item['name'];
+            $table = $item['table'] ?? $name;
+            /** @psalm-suppress DocblockTypeContradiction - array shape is not type safe. */
+            if (!is_string($table)) {
+                throw new InvalidArgumentException('Table name must be a string.');
+            }
+            $map = $item['map'] ?? $name;
+            /** @psalm-suppress DocblockTypeContradiction - array shape is not type safe. */
+            if (!is_string($map)) {
+                throw new InvalidArgumentException('Map name must be a string.');
             }
 
+            yield $name => [
+                'table' => $table,
+                'map'   => $map,
+            ];
+        }
+    }
+
+    /** @psalm-assert TContaoDictionaryMetaDataInput $entry */
+    private function checkMetaEntry(mixed $entry): void
+    {
+        if (is_string($entry)) {
+            return;
+        }
+        if (!is_array($entry)) {
             throw new InvalidArgumentException('Invalid meta data');
         }
+
+        if (!is_string($name = $entry['name'] ?? null)) {
+            throw new InvalidArgumentException('Name must be present and a string.');
+        }
+        if (!is_string($entry['table'] ?? $name)) {
+            throw new InvalidArgumentException('Table name must be a string.');
+        }
+        if (!is_string($entry['map'] ?? $name)) {
+            throw new InvalidArgumentException('Map name must be a string.');
+        }
+    }
     }
 }
