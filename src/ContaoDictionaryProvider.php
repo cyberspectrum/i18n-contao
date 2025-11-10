@@ -92,9 +92,7 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         string $targetLanguage,
         array $customData = []
     ): DictionaryInterface {
-        if ($this->logger) {
-            $this->logger->debug('Contao: opening dictionary ' . $name);
-        }
+        $this->logger?->debug('Contao: opening dictionary ' . $name);
         if (array_key_exists($name, $this->dictionaryMeta)) {
             $metaData   = $this->dictionaryMeta[$name];
             $dictionary = $this->getContaoDictionaryForMeta($metaData, $sourceLanguage, $targetLanguage);
@@ -135,9 +133,7 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         string $targetLanguage,
         array $customData = []
     ): WritableDictionaryInterface {
-        if ($this->logger) {
-            $this->logger->debug('Contao: opening writable dictionary ' . $name);
-        }
+        $this->logger?->debug('Contao: opening writable dictionary ' . $name);
         if (array_key_exists($name, $this->dictionaryMeta)) {
             return $this->getContaoDictionaryForMeta($this->dictionaryMeta[$name], $sourceLanguage, $targetLanguage);
         }
@@ -256,7 +252,6 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         if (!is_array($entry)) {
             throw new InvalidArgumentException('Invalid meta data');
         }
-
         if (!is_string($name = $entry['name'] ?? null)) {
             throw new InvalidArgumentException('Name must be present and a string.');
         }
