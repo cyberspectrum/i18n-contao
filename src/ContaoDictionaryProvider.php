@@ -27,6 +27,8 @@ use function is_string;
  * @psalm-type TContaoDictionaryMetaData=array{table: string, map: string}
  *
  * @api
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
 {
@@ -63,7 +65,8 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
                     'name'  => 'tl_article_tl_content',
                     'table' => 'tl_content',
                     'map'   => 'tl_article.tl_content',
-                ]
+                ],
+                'tl_files',
             ];
         }
 
@@ -269,14 +272,23 @@ final class ContaoDictionaryProvider implements DictionaryProviderInterface, Wri
         string $sourceLanguage,
         string $targetLanguage
     ): WritableDictionaryInterface {
-        $dictionary = new ContaoTableDictionary(
-            $metaData['table'],
-            $sourceLanguage,
-            $targetLanguage,
-            $this->connection,
-            $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
-            $this->extractorFactory->getExtractorsForTable($metaData['table'])
-        );
+        if ($metaData['table'] === 'tl_files') {
+            $dictionary = new ContaoFilesDictionary(
+                $sourceLanguage,
+                $targetLanguage,
+                $this->connection,
+                $this->extractorFactory->getExtractorsForTable($metaData['table'])
+            );
+        } else {
+            $dictionary = new ContaoTableDictionary(
+                $metaData['table'],
+                $sourceLanguage,
+                $targetLanguage,
+                $this->connection,
+                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
+                $this->extractorFactory->getExtractorsForTable($metaData['table'])
+            );
+        }
         if ($this->logger) {
             $dictionary->setLogger($this->logger);
         }
