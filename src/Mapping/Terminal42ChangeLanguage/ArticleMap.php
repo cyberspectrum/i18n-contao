@@ -95,11 +95,11 @@ final class ArticleMap implements MappingInterface
             return;
         }
 
-        foreach ($articles as $index => $article) {
+        foreach ($articles as $article) {
             $mainId    = $article['languageMain'];
             $articleId = $article['id'];
             if (empty($mainId)) {
-                if (0 === ($mainId = $this->determineMapFor($index, $article['inColumn'], $mainPage))) {
+                if (0 === ($mainId = $this->determineMapFor($article['index'], $article['inColumn'], $mainPage))) {
                     $this->logger->warning(
                         'Article {id} in page {page} has no fallback set and unable to determine automatically. ' .
                         'Article skipped.',
@@ -112,7 +112,7 @@ final class ArticleMap implements MappingInterface
                     'Article {id} (index: {index}) has no fallback set, expect problems, I guess it is {guessed}',
                     [
                         'id' => $articleId,
-                        'index' => $index,
+                        'index' => $article['index'],
                         'guessed' => $mainId,
                         'msg_type' => 'article_fallback_guess'
                     ]

@@ -111,14 +111,21 @@ class ContaoDatabase
 
         $rows = $this->executeQuery($builder);
         $result = [];
+        $rowIndex = [];
         while ($row = $rows->fetchAssociative()) {
+            $columnName = $row['inColumn'];
+            if (!\array_key_exists($columnName, $rowIndex)) {
+                $rowIndex[$columnName] = 0;
+            }
             /** @var array{id: string, pid: string, languageMain: string, inColumn: string} $row */
             $result[] = [
                 'id' => (int) $row['id'],
                 'pid' => (int) $row['pid'],
                 'languageMain' => (int) $row['languageMain'] ,
-                'inColumn' => $row['inColumn'],
+                'inColumn' => $columnName,
+                'index' => $rowIndex[$columnName]
             ];
+            $rowIndex[$columnName]++;
         }
         return $result;
     }
