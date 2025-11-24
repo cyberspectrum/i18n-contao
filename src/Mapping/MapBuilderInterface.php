@@ -11,6 +11,8 @@ namespace CyberSpectrum\I18N\Contao\Mapping;
  */
 interface MapBuilderInterface
 {
+    /** @return iterable<int, string> */
+    public function getAvailableTablePaths(): iterable;
 
     /**
      * Get a mapping.

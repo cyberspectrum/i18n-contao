@@ -64,6 +64,15 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
         $this->database = $database;
     }
 
+    public function getAvailableTablePaths(): iterable
+    {
+        return [
+            'tl_page',
+            'tl_article',
+            'tl_article.tl_content',
+        ];
+    }
+
     /**
      * {@inheritDoc}
      *
