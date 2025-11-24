@@ -70,9 +70,9 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
      * @throws InvalidArgumentException When the table is unknown.
      */
     #[\Override]
-    public function getMappingFor(string $tables, string $sourceLanguage, string $targetLanguage): MappingInterface
+    public function getMappingFor(string $tablePath, string $sourceLanguage, string $targetLanguage): MappingInterface
     {
-        switch ($tables) {
+        switch ($tablePath) {
             case 'tl_page':
                 return $this->getPageMap($sourceLanguage, $targetLanguage);
             case 'tl_article':
@@ -81,7 +81,7 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
                 return $this->getArticleContentMap($sourceLanguage, $targetLanguage);
             default:
         }
-        throw new InvalidArgumentException('Unknown table ' . $tables);
+        throw new InvalidArgumentException('Unknown table ' . $tablePath);
     }
 
     /**

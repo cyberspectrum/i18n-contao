@@ -11,14 +11,15 @@ namespace CyberSpectrum\I18N\Contao\Mapping;
  */
 interface MapBuilderInterface
 {
+
     /**
      * Get a mapping.
      *
-     * @param string $tables         The table path. For root tables, the table name only, for parented the full path.
+     * @param string $tablePath      The table path. For root tables, the table name only, for parented the full path.
      * @param string $sourceLanguage The source language.
      * @param string $targetLanguage The target language.
      */
-    public function getMappingFor(string $tables, string $sourceLanguage, string $targetLanguage): MappingInterface;
+    public function getMappingFor(string $tablePath, string $sourceLanguage, string $targetLanguage): MappingInterface;
 
     /**
      * Test if a mapping is supported.
