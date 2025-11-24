@@ -150,14 +150,14 @@ final class PageMap implements MappingInterface
                     if (null === ($main = $this->determineMapFor($index, $child['pid'], $map))) {
                         $this->logger->warning(
                             'Page {id} has no fallback set and unable to determine automatically. Page skipped.',
-                            ['id' => $childId]
+                            ['id' => $childId, 'msg_type' => 'page_no_fallback']
                         );
                         continue;
                     }
 
                     $this->logger->warning(
                         'Page {id} (index: {index}) has no fallback set, expect problems, I guess it is {guessed}',
-                        ['id' => $childId, 'index' => $index, 'guessed' => $main]
+                        ['id' => $childId, 'index' => $index, 'guessed' => $main, 'msg_type' => 'page_fallback_guess']
                     );
                 }
 
