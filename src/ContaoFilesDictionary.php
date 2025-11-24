@@ -322,6 +322,7 @@ final class ContaoFilesDictionary implements WritableDictionaryInterface
             if (count($result) < 100) {
                 break;
             }
+            $page++;
         }
     }
 }
