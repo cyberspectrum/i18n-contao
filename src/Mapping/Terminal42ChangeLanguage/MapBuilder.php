@@ -64,6 +64,7 @@ class MapBuilder implements MapBuilderInterface, LoggerAwareInterface
         $this->database = $database;
     }
 
+    #[\Override]
     public function getAvailableTablePaths(): iterable
     {
         return [

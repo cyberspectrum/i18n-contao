@@ -91,7 +91,7 @@ class ContaoDatabase
      * @param int         $pageId   The page id.
      * @param string|null $inColumn The optional column to filter by.
      *
-     * @return list<array{id: int, pid: int, languageMain: int, inColumn: string}>
+     * @return list<array{id: int, pid: int, languageMain: int, inColumn: string, index: int}>
      */
     public function getArticlesByPid(int $pageId, ?string $inColumn = null): array
     {
@@ -111,6 +111,7 @@ class ContaoDatabase
 
         $rows = $this->executeQuery($builder);
         $result = [];
+        /** @var array<string, int> $rowIndex */
         $rowIndex = [];
         while ($row = $rows->fetchAssociative()) {
             $columnName = $row['inColumn'];
