@@ -46,11 +46,11 @@ class ContaoDatabase
             ->addOrderBy('sorting'));
         $result = [];
         while ($row = $rows->fetchAssociative()) {
-            /** @var array{language: string, id: string, fallback: string} $row */
+            /** @var array{language: string, id: string|int, fallback: string|int} $row */
             $result[] = [
                 'language' => $row['language'] ,
                 'id' => (int) $row['id'],
-                'fallback' => $row['fallback'],
+                'fallback' => (string) $row['fallback'],
             ];
         }
         return $result;
@@ -114,7 +114,7 @@ class ContaoDatabase
         /** @var array<string, int> $rowIndex */
         $rowIndex = [];
         while ($row = $rows->fetchAssociative()) {
-            $columnName = $row['inColumn'];
+            $columnName = (string) $row['inColumn'];
             if (!\array_key_exists($columnName, $rowIndex)) {
                 $rowIndex[$columnName] = 0;
             }

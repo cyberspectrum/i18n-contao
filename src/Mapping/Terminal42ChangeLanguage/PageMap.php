@@ -86,7 +86,7 @@ final class PageMap implements MappingInterface
         foreach ($this->database->getRootPages() as $root) {
             $language = $root['language'];
 
-            if ('1' === (string) $root['fallback']) {
+            if ('1' === $root['fallback']) {
                 $this->mainLanguage = $language;
                 $result['main']     = $root['id'];
             }
