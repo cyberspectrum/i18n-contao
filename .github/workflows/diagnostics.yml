@@ -43,6 +43,9 @@ jobs:
       # see https://github.com/shivammathur/setup-php
       - name: PHP ${{ matrix.php }} Setup PHP.
         uses: shivammathur/setup-php@v2
+        env:
+          # See https://github.com/shivammathur/setup-php/issues/895
+          update: true
         with:
           php-version: ${{ matrix.php }}
 
