@@ -6,26 +6,40 @@ namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
 use CyberSpectrum\I18N\Contao\Extractor\AbstractConditionalExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\Condition\ConditionInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/** @covers \CyberSpectrum\I18N\Contao\Extractor\AbstractConditionalExtractor */
+/** @covers  */
+#[CoversClass(AbstractConditionalExtractor::class)]
 class AbstractConditionalExtractorTest extends TestCase
 {
     public function testFunctionality(): void
     {
-        $extractor = $this->getMockForAbstractClass(AbstractConditionalExtractor::class);
-
-        $condition = $this->getMockForAbstractClass(ConditionInterface::class);
+        $extractor = $this->getMockBuilder(AbstractConditionalExtractor::class)->onlyMethods(['name'])->getMock();
+        $condition = $this->getMockBuilder(ConditionInterface::class)->onlyMethods(['evaluate'])->getMock();
 
         $condition
             ->expects($this->exactly(2))
             ->method('evaluate')
-            ->withConsecutive([$row1 = ['row' => 1]], [$row2 = ['row' => 2]])
-            ->willReturnOnConsecutiveCalls(true, false);
+            ->willReturnCallback(
+                static function (array $data): bool {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(['row' => 1], $data);
+                            return true;
+                        case 1:
+                            self::assertSame(['row' => 2], $data);
+                            return false;
+                        default:
+                            self::fail('Unexpected invocation');
+                    }
+                }
+            );
 
         $extractor->setCondition($condition);
 
-        $this->assertTrue($extractor->supports($row1));
-        $this->assertFalse($extractor->supports($row2));
+        $this->assertTrue($extractor->supports(['row' => 1]));
+        $this->assertFalse($extractor->supports(['row' => 2]));
     }
 }

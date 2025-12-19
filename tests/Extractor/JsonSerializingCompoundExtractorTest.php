@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
+use CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\JsonSerializingCompoundExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\StringExtractorInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * This tests the json serializing extractor.
- *
- * @covers \CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor
- * @covers \CyberSpectrum\I18N\Contao\Extractor\JsonSerializingCompoundExtractor
- */
+use function iterator_to_array;
+
+#[CoversClass(AbstractSerializingCompoundExtractor::class)]
+#[CoversClass(JsonSerializingCompoundExtractor::class)]
+
 class JsonSerializingCompoundExtractorTest extends TestCase
 {
     public function testReadsCorrectly(): void
@@ -21,10 +22,10 @@ class JsonSerializingCompoundExtractorTest extends TestCase
         $array = ['json' => json_encode([
             'headline' => 'headline content',
             'text' => 'text content',
-        ])];
+        ], JSON_THROW_ON_ERROR)];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->once())
@@ -50,7 +51,7 @@ class JsonSerializingCompoundExtractorTest extends TestCase
                 'headline',
                 'text',
             ],
-            \iterator_to_array($extractor->keys($array))
+            iterator_to_array($extractor->keys($array))
         );
 
         $this->assertSame('headline content', $extractor->get('headline', $array));
@@ -61,7 +62,7 @@ class JsonSerializingCompoundExtractorTest extends TestCase
     {
         $array = ['json' => json_encode(null)];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline->expects($this->never())->method('get');
 
@@ -69,17 +70,17 @@ class JsonSerializingCompoundExtractorTest extends TestCase
 
         $this->assertSame('json', $extractor->name());
         $this->assertTrue($extractor->supports($array));
-        $this->assertSame([], \iterator_to_array($extractor->keys($array)));
+        $this->assertSame([], iterator_to_array($extractor->keys($array)));
 
         $this->assertNull($extractor->get('headline', $array));
     }
 
     public function testWritesCorrectly(): void
     {
-        $array = ['json' => json_encode([], JSON_FORCE_OBJECT)];
+        $array = ['json' => json_encode([], JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT)];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->once())
@@ -104,6 +105,6 @@ class JsonSerializingCompoundExtractorTest extends TestCase
         $this->assertSame(['json' => json_encode([
             'headline' => 'headline content',
             'text' => 'text content',
-        ])], $array);
+        ], JSON_THROW_ON_ERROR)], $array);
     }
 }

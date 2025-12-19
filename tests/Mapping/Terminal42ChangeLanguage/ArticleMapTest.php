@@ -9,12 +9,15 @@ use Closure;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
-/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap */
+#[CoversClass(ArticleMap::class)]
 class ArticleMapTest extends TestCase
 {
+    /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -26,7 +29,7 @@ class ArticleMapTest extends TestCase
                 ['id' => 102, 'language' => 'fr', 'fallback' => ''],
             ]);
 
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $pageMap  = $this
             ->getMockBuilder(PageMap::class)
             ->onlyMethods(['sourceIds', 'targetIds', 'getMainFromSource', 'getMainFromTarget'])
@@ -41,56 +44,88 @@ class ArticleMapTest extends TestCase
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromSource')
-            ->withConsecutive([101], [102])
-            ->willReturn(1, 2);
+            ->willReturnCallback(
+                static function (int $sourceId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(101, $sourceId);
+                            return 1;
+                        case 1:
+                            self::assertSame(102, $sourceId);
+                            return 2;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
 
         $pageMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001, 1002]));
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromTarget')
-            ->withConsecutive([1001], [1002])
-            ->willReturn(1, 2);
-        Closure::fromCallable(function () {
+            ->willReturnCallback(
+                static function (int $targetId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(1001, $targetId);
+                            return 1;
+                        case 1:
+                            self::assertSame(1002, $targetId);
+                            return 2;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
+        (function () {
             $this->mainLanguage = 'en';
-        })->bindTo($pageMap, PageMap::class)->__invoke();
+        })(...)->bindTo($pageMap, PageMap::class)->__invoke();
 
         $database
             ->expects($this->exactly(4))
             ->method('getArticlesByPid')
-            ->withConsecutive([101], [102], [1001], [1002])
-            ->willReturn(
-                [
-                    [
-                        'id'           => 101,
-                        'pid'          => 101,
-                        'inColumn'     => 'main',
-                        'languageMain' => 1,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 102,
-                        'pid'          => 102,
-                        'inColumn'     => 'main',
-                        'languageMain' => 2,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 1001,
-                        'pid'          => 1001,
-                        'inColumn'     => 'main',
-                        'languageMain' => 1,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 1002,
-                        'pid'          => 1002,
-                        'inColumn'     => 'main',
-                        'languageMain' => 2,
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $pageId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(101, $pageId);
+                            return [[
+                                'id'           => 101,
+                                'pid'          => 101,
+                                'inColumn'     => 'main',
+                                'languageMain' => 1,
+                            ]];
+                        case 1:
+                            self::assertSame(102, $pageId);
+                            return [[
+                                'id'           => 102,
+                                'pid'          => 102,
+                                'inColumn'     => 'main',
+                                'languageMain' => 2,
+                            ]];
+                        case 2:
+                            self::assertSame(1001, $pageId);
+                            return [[
+                                'id'           => 1001,
+                                'pid'          => 1001,
+                                'inColumn'     => 'main',
+                                'languageMain' => 1,
+                            ]];
+                        case 3:
+                            self::assertSame(1002, $pageId);
+                            return [[
+                                'id'           => 1002,
+                                'pid'          => 1002,
+                                'inColumn'     => 'main',
+                                'languageMain' => 2,
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleMap($pageMap, $logger);

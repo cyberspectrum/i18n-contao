@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
+use CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\SerializingCompoundExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\StringExtractorInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/**
- * @covers \CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor
- * @covers \CyberSpectrum\I18N\Contao\Extractor\SerializingCompoundExtractor
- */
+#[CoversClass(AbstractSerializingCompoundExtractor::class)]
+#[CoversClass(SerializingCompoundExtractor::class)]
 class SerializingCompoundExtractorTest extends TestCase
 {
     public function testReadsCorrectly(): void
@@ -21,8 +21,8 @@ class SerializingCompoundExtractorTest extends TestCase
             'text' => 'text content',
         ])];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->once())
@@ -59,13 +59,13 @@ class SerializingCompoundExtractorTest extends TestCase
     {
         $array = ['serialized' => serialize([])];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(static function (array &$row, string $value = null) {
                 $row['headline'] = $value;
             });
 
@@ -73,7 +73,7 @@ class SerializingCompoundExtractorTest extends TestCase
         $text
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(static function (array &$row, string $value = null) {
                 $row['text'] = $value;
             });
 

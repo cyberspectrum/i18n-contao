@@ -6,9 +6,13 @@ namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
 use CyberSpectrum\I18N\Contao\Extractor\ArrayExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\StringExtractorInterface;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/** @covers \CyberSpectrum\I18N\Contao\Extractor\ArrayExtractor */
+use function iterator_to_array;
+
+#[CoversClass(ArrayExtractor::class)]
+
 class ArrayExtractorTest extends TestCase
 {
     public function testOnArray(): void
@@ -39,7 +43,7 @@ class ArrayExtractorTest extends TestCase
             ],
         ];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->exactly(2))
@@ -48,7 +52,7 @@ class ArrayExtractorTest extends TestCase
                 return $row['headline'];
             });
 
-        $text = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $text = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $text->expects($this->once())->method('name')->willReturn('text');
         $text
             ->expects($this->exactly(2))
@@ -57,7 +61,7 @@ class ArrayExtractorTest extends TestCase
                 return $row['text'];
             });
 
-        $subText = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $subText = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $subText->expects($this->once())->method('name')->willReturn('text');
         $subText
             ->expects($this->exactly(3))
@@ -81,7 +85,7 @@ class ArrayExtractorTest extends TestCase
                 '1.sub.0.text',
                 '1.sub.1.text',
             ],
-            \iterator_to_array($extractor->keys($array))
+            iterator_to_array($extractor->keys($array))
         );
 
         $this->assertSame('headline content 1', $extractor->get('0.headline', $array));
@@ -100,8 +104,8 @@ class ArrayExtractorTest extends TestCase
             ],
         ];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->exactly(2))
@@ -118,7 +122,7 @@ class ArrayExtractorTest extends TestCase
                 $row['text'] = $value;
             });
 
-        $subText = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $subText = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $subText->expects($this->once())->method('name')->willReturn('text');
         $subText
             ->expects($this->exactly(3))

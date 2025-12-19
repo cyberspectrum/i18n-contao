@@ -5,9 +5,10 @@ declare(strict_types=1);
 namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
 use CyberSpectrum\I18N\Contao\Extractor\TextExtractor;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
-/** @covers \CyberSpectrum\I18N\Contao\Extractor\TextExtractor */
+#[CoversClass(TextExtractor::class)]
 class TextExtractorTest extends TestCase
 {
     public function testReadsCorrectly(): void

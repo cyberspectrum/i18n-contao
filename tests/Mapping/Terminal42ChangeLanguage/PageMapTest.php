@@ -6,16 +6,18 @@ namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
-/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap */
+#[CoversClass(PageMap::class)]
 class PageMapTest extends TestCase
 {
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
         $database->expects($this->once())->method('getRootPages')->willReturn([
             [
@@ -38,35 +40,42 @@ class PageMapTest extends TestCase
         $database
             ->expects($this->exactly(4))
             ->method('getPagesByPidList')
-            ->withConsecutive(
-                // Source lookups
-                [[100]],
-                [[200]],
-                // Target lookups
-                [[1000]],
-                [[2000]]
-            )
-            ->willReturnOnConsecutiveCalls(
-                // Source lookups
-                [
-                    [
-                        'id'           => 200,
-                        'pid'          => 100,
-                        'languageMain' => 2,
-                        'type'         => 'regular',
-                    ],
-                ],
-                [],
-                // Target lookups
-                [
-                    [
-                        'id'           => 2000,
-                        'pid'          => 1000,
-                        'languageMain' => 2,
-                        'type'         => 'regular',
-                    ],
-                ],
-                []
+            ->willReturnCallback(
+                static function (array $pidList): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Source lookups
+                            self::assertSame([100], $pidList);
+                            return [
+                                [
+                                    'id' => 200,
+                                    'pid' => 100,
+                                    'languageMain' => 2,
+                                    'type' => 'regular',
+                                ],
+                            ];
+                        case 1:
+                            self::assertSame([200], $pidList);
+                            return [];
+                        case 2:
+                            // Target lookups
+                            self::assertSame([1000], $pidList);
+                            return [
+                                [
+                                    'id'           => 2000,
+                                    'pid'          => 1000,
+                                    'languageMain' => 2,
+                                    'type'         => 'regular',
+                                ],
+                            ];
+                        case 3:
+                            self::assertSame([2000], $pidList);
+                            return [];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new PageMap('de', 'fr', $database, $logger);
@@ -89,7 +98,7 @@ class PageMapTest extends TestCase
     public function testBuildsMapUsingLookupFallback(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
         $database->expects($this->once())->method('getRootPages')->willReturn([
             [
@@ -112,48 +121,55 @@ class PageMapTest extends TestCase
         $database
             ->expects($this->exactly(5))
             ->method('getPagesByPidList')
-            ->withConsecutive(
-                // Source lookup
-                [[100]],
-                // Fallback lookup
-                [[1]],
-                // Source lookup
-                [[200]],
-                // Target lookups
-                [[1000]],
-                [[2000]]
-            )
-            ->willReturnOnConsecutiveCalls(
-                // Source lookup
-                [
-                    [
-                        'id'           => 200,
-                        'pid'          => 100,
-                        'languageMain' => null,
-                        'type'         => 'regular',
-                    ],
-                ],
-                // Fallback lookup
-                [
-                    [
-                        'id'           => 2,
-                        'pid'          => 1,
-                        'languageMain' => null,
-                        'type'         => 'regular',
-                    ],
-                ],
-                // Source lookup
-                [],
-                // Target lookups
-                [
-                    [
-                        'id'           => 2000,
-                        'pid'          => 1000,
-                        'languageMain' => 2,
-                        'type'         => 'regular',
-                    ],
-                ],
-                []
+
+            ->willReturnCallback(
+                static function (array $pidList): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Source lookup
+                            self::assertSame([100], $pidList);
+                            return [
+                                [
+                                    'id' => 200,
+                                    'pid' => 100,
+                                    'languageMain' => null,
+                                    'type' => 'regular',
+                                ],
+                            ];
+                        case 1:
+                            // Fallback lookup
+                            self::assertSame([1], $pidList);
+                            return [
+                                [
+                                    'id'           => 2,
+                                    'pid'          => 1,
+                                    'languageMain' => null,
+                                    'type'         => 'regular',
+                                ],
+                            ];
+                        case 2:
+                            // Source lookup
+                            self::assertSame([200], $pidList);
+                            return [];
+                        case 3:
+                            // Target lookups
+                            self::assertSame([1000], $pidList);
+                            return  [
+                                [
+                                    'id'           => 2000,
+                                    'pid'          => 1000,
+                                    'languageMain' => 2,
+                                    'type'         => 'regular',
+                                ],
+                            ];
+                        case 4:
+                            self::assertSame([2000], $pidList);
+                            return [];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $pageMap = new PageMap('de', 'fr', $database, $logger);

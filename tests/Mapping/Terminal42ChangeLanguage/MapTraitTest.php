@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
+use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait;
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use InvalidArgumentException;
@@ -12,13 +15,13 @@ use Symfony\Component\ErrorHandler\BufferingLogger;
 
 use function iterator_to_array;
 
-/** @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait */
+#[CoversClass(MapTrait::class)]
 class MapTraitTest extends TestCase
 {
     public function testGetters(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
 
         $instance = new MapTraitDouble([100 => 1, 200 => 2], [1000 => 1, 2000 => 2], $database, $logger);
 
@@ -39,7 +42,7 @@ class MapTraitTest extends TestCase
     public function testGetTargetIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $instance = new MapTraitDouble([], [], $database, $logger);
 
         $this->expectException(InvalidArgumentException::class);
@@ -51,7 +54,7 @@ class MapTraitTest extends TestCase
     public function testGetSourceIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $instance = new MapTraitDouble([], [], $database, $logger);
 
         $this->expectException(InvalidArgumentException::class);
@@ -63,7 +66,7 @@ class MapTraitTest extends TestCase
     public function testMainFromSourceThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $instance = new MapTraitDouble([], [], $database, $logger);
 
         $this->expectException(InvalidArgumentException::class);
@@ -75,7 +78,7 @@ class MapTraitTest extends TestCase
     public function testGetMainFromTargetThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $instance = new MapTraitDouble([], [], $database, $logger);
 
         $this->expectException(InvalidArgumentException::class);
@@ -89,7 +92,7 @@ class MapTraitTest extends TestCase
      *
      * @return array
      */
-    public function analyzeProvider(): array
+    public static function analyzeProvider(): array
     {
         return [
             'Good mapping' => [
@@ -172,11 +175,8 @@ class MapTraitTest extends TestCase
      * @param array $expected      The expected errors.
      * @param array $sourceMapping The mapping to check.
      * @param array $targetMapping The mapping to check.
-     *
-     * @return void
-     *
-     * @dataProvider analyzeProvider
      */
+    #[DataProvider('analyzeProvider')]
     public function testAnalyzeReportsKnownErrors(array $expected, array $sourceMapping, array $targetMapping): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
