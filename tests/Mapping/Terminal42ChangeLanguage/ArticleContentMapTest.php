@@ -8,6 +8,7 @@ use ArrayIterator;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleContentMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -22,6 +23,7 @@ class ArticleContentMapTest extends TestCase
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
      * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapCorrectly(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -144,6 +146,7 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame(2, $map->getMainFromTarget(1002));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testSkipsForUnknownMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -207,6 +210,7 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInSource(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -273,10 +277,11 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInTarget(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
             ->onlyMethods([
@@ -339,6 +344,7 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();

@@ -6,6 +6,7 @@ namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -14,6 +15,7 @@ use RuntimeException;
 #[CoversClass(PageMap::class)]
 class PageMapTest extends TestCase
 {
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -95,6 +97,7 @@ class PageMapTest extends TestCase
         $this->assertSame('unknown', $map->getTypeFor(0));
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapUsingLookupFallback(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();

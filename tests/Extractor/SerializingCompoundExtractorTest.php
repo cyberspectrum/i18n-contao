@@ -65,7 +65,7 @@ class SerializingCompoundExtractorTest extends TestCase
         $headline
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(static function (array &$row, string $value = null) {
+            ->willReturnCallback(static function (array &$row, ?string $value = null) {
                 $row['headline'] = $value;
             });
 
@@ -73,7 +73,7 @@ class SerializingCompoundExtractorTest extends TestCase
         $text
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(static function (array &$row, string $value = null) {
+            ->willReturnCallback(static function (array &$row, ?string $value = null) {
                 $row['text'] = $value;
             });
 

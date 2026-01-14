@@ -6,7 +6,8 @@ namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait;
-use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -15,9 +16,10 @@ use Symfony\Component\ErrorHandler\BufferingLogger;
 
 use function iterator_to_array;
 
-#[CoversClass(MapTrait::class)]
+#[CoversTrait(MapTrait::class)]
 class MapTraitTest extends TestCase
 {
+    #[AllowMockObjectsWithoutExpectations]
     public function testGetters(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -39,6 +41,7 @@ class MapTraitTest extends TestCase
         $this->assertSame($database, $instance->getDatabase());
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testGetTargetIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -51,6 +54,7 @@ class MapTraitTest extends TestCase
         $instance->getTargetIdFor(1);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testGetSourceIdForThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -63,6 +67,7 @@ class MapTraitTest extends TestCase
         $instance->getSourceIdFor(1);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testMainFromSourceThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -75,6 +80,7 @@ class MapTraitTest extends TestCase
         $instance->getMainFromSource(1);
     }
 
+    #[AllowMockObjectsWithoutExpectations]
     public function testGetMainFromTargetThrowsExceptionWhenUnmapped(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
@@ -177,6 +183,7 @@ class MapTraitTest extends TestCase
      * @param array $targetMapping The mapping to check.
      */
     #[DataProvider('analyzeProvider')]
+    #[AllowMockObjectsWithoutExpectations]
     public function testAnalyzeReportsKnownErrors(array $expected, array $sourceMapping, array $targetMapping): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();

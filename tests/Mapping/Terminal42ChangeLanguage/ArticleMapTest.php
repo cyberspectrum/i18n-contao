@@ -9,6 +9,7 @@ use Closure;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -18,6 +19,7 @@ use RuntimeException;
 class ArticleMapTest extends TestCase
 {
     /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();

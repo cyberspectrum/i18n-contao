@@ -110,7 +110,7 @@ class ArrayExtractorTest extends TestCase
         $headline
             ->expects($this->exactly(2))
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['headline'] = $value;
             });
 
@@ -118,7 +118,7 @@ class ArrayExtractorTest extends TestCase
         $text
             ->expects($this->exactly(2))
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['text'] = $value;
             });
 
@@ -127,7 +127,7 @@ class ArrayExtractorTest extends TestCase
         $subText
             ->expects($this->exactly(3))
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['text'] = $value;
             });
         $subExtractor = new ArrayExtractor('sub', [$subText]);
@@ -173,13 +173,13 @@ class ArrayExtractorTest extends TestCase
     {
         $array = [];
 
-        $headline = $this->getMockForAbstractClass(StringExtractorInterface::class);
-        $text     = $this->getMockForAbstractClass(StringExtractorInterface::class);
+        $headline = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
+        $text     = $this->getMockBuilder(StringExtractorInterface::class)->getMock();
         $headline->expects($this->once())->method('name')->willReturn('headline');
         $headline
             ->expects($this->exactly(2))
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['headline'] = $value;
             });
 
@@ -187,7 +187,7 @@ class ArrayExtractorTest extends TestCase
         $text
             ->expects($this->exactly(2))
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['text'] = $value;
             });
 

@@ -6,6 +6,7 @@ namespace CyberSpectrum\I18N\Contao\Test\Extractor;
 
 use CyberSpectrum\I18N\Contao\Extractor\AbstractConditionalExtractor;
 use CyberSpectrum\I18N\Contao\Extractor\Condition\ConditionInterface;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -13,6 +14,7 @@ use PHPUnit\Framework\TestCase;
 #[CoversClass(AbstractConditionalExtractor::class)]
 class AbstractConditionalExtractorTest extends TestCase
 {
+    #[AllowMockObjectsWithoutExpectations]
     public function testFunctionality(): void
     {
         $extractor = $this->getMockBuilder(AbstractConditionalExtractor::class)->onlyMethods(['name'])->getMock();

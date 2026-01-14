@@ -85,7 +85,7 @@ class JsonSerializingCompoundExtractorTest extends TestCase
         $headline
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['headline'] = $value;
             });
 
@@ -93,7 +93,7 @@ class JsonSerializingCompoundExtractorTest extends TestCase
         $text
             ->expects($this->once())
             ->method('set')
-            ->willReturnCallback(function (array &$row, string $value = null) {
+            ->willReturnCallback(function (array &$row, ?string $value = null) {
                 $row['text'] = $value;
             });
 
