@@ -17,8 +17,6 @@ use Symfony\Component\ErrorHandler\BufferingLogger;
 
 use function iterator_to_array;
 
-// FIXME: Remove CoversClass when we drop support for phpunit 10.
-#[CoversClass(MapTrait::class)]
 #[CoversTrait(MapTrait::class)]
 class MapTraitTest extends TestCase
 {
