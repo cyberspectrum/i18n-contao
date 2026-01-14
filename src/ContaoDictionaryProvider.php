@@ -1,23 +1,6 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao;
 
@@ -31,66 +14,50 @@ use CyberSpectrum\I18N\Dictionary\WritableDictionaryInterface;
 use CyberSpectrum\I18N\Dictionary\WritableDictionaryProviderInterface;
 use CyberSpectrum\I18N\Exception\DictionaryNotFoundException;
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
 use Psr\Log\LoggerAwareTrait;
-use Psr\Log\NullLogger;
+use Traversable;
+
+use function is_string;
 
 /**
  * This provides the Contao dictionaries.
+ *
+ * @psalm-type TContaoDictionaryMetaDataInput=array{name: string, table: string, map: string}|string
+ * @psalm-type TContaoDictionaryMetaData=array{table: string, map: string}
+ *
+ * @api
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
+final class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableDictionaryProviderInterface
 {
     use LoggerAwareTrait;
 
     public const ALL_TABLES = 'contao';
 
     /**
-     * Connection.
-     *
-     * @var Connection
-     */
-    private $connection;
-
-    /**
-     * The extractor factory.
-     *
-     * @var ExtractorFactory
-     */
-    private $extractorFactory;
-
-    /**
-     * The mapping builder.
-     *
-     * @var MapBuilderInterface
-     */
-    private $mapBuilder;
-
-    /**
      * The meta information.
      *
-     * @var array
+     * @var array<string, TContaoDictionaryMetaData>
      */
-    private $dictionaryMeta;
+    private readonly array $dictionaryMeta;
 
     /**
      * Create a new instance.
      *
-     * @param Connection          $connection       The database connection.
-     * @param ExtractorFactory    $extractorFactory The extractor factory.
-     * @param MapBuilderInterface $mapBuilder       The mapping builder.
-     * @param array|null          $dictionaryMeta   The dictionary meta information.
+     * @param Connection                                $connection       The database connection.
+     * @param ExtractorFactory                          $extractorFactory The extractor factory.
+     * @param MapBuilderInterface                       $mapBuilder       The mapping builder.
+     * @param list<TContaoDictionaryMetaDataInput>|null $dictionaryMeta   The dictionary meta information.
      */
     public function __construct(
-        Connection $connection,
-        ExtractorFactory $extractorFactory,
-        MapBuilderInterface $mapBuilder,
-        array $dictionaryMeta = null
+        private readonly Connection $connection,
+        private readonly ExtractorFactory $extractorFactory,
+        private readonly MapBuilderInterface $mapBuilder,
+        ?array $dictionaryMeta
     ) {
-        $this->connection       = $connection;
-        $this->extractorFactory = $extractorFactory;
-        $this->mapBuilder       = $mapBuilder;
-        $this->setLogger(new NullLogger());
-
-        if (empty($dictionaryMeta)) {
+        if ([] === $dictionaryMeta || null === $dictionaryMeta) {
             $dictionaryMeta = [
                 'tl_page',
                 'tl_article',
@@ -98,20 +65,20 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
                     'name'  => 'tl_article_tl_content',
                     'table' => 'tl_content',
                     'map'   => 'tl_article.tl_content',
-                ]
+                ],
+                'tl_files',
             ];
         }
-        foreach ($dictionaryMeta as $item) {
-            $this->addDictionaryMeta($item);
+
+        $mappedDictionaries = [];
+        foreach ($this->mapDictionaryMeta($dictionaryMeta) as $name => $item) {
+            $mappedDictionaries[$name] = $item;
         }
+        $this->dictionaryMeta = $mappedDictionaries;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return \Traversable|DictionaryInformation[]
-     */
-    public function getAvailableDictionaries(): \Traversable
+    #[\Override]
+    public function getAvailableDictionaries(): Traversable
     {
         yield from $this->getAvailableDictionaryInformation();
     }
@@ -121,28 +88,21 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      *
      * @throws DictionaryNotFoundException When the dictionary does not exist.
      */
+    #[\Override]
     public function getDictionary(
         string $name,
         string $sourceLanguage,
         string $targetLanguage,
         array $customData = []
     ): DictionaryInterface {
-        $this->logger->debug('Contao: opening dictionary ' . $name);
+        $this->logger?->debug('Contao: opening dictionary ' . $name);
         if (array_key_exists($name, $this->dictionaryMeta)) {
             $metaData   = $this->dictionaryMeta[$name];
-            $dictionary = new ContaoTableDictionary(
-                $metaData['table'],
-                $sourceLanguage,
-                $targetLanguage,
-                $this->connection,
-                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
-                $this->extractorFactory->getExtractorsForTable($metaData['table'])
-            );
-            $dictionary->setLogger($this->logger);
+            $dictionary = $this->getContaoDictionaryForMeta($metaData, $sourceLanguage, $targetLanguage);
 
             return $dictionary;
         }
-        if (static::ALL_TABLES === $name) {
+        if (self::ALL_TABLES === $name) {
             $dictionary = new CompoundDictionary($sourceLanguage, $targetLanguage);
             foreach (array_keys($this->dictionaryMeta) as $subName) {
                 $dictionary->addDictionary($subName, $this->getDictionary(
@@ -158,10 +118,8 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
         throw new DictionaryNotFoundException($name, $sourceLanguage, $targetLanguage);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public function getAvailableWritableDictionaries(): \Traversable
+    #[\Override]
+    public function getAvailableWritableDictionaries(): Traversable
     {
         yield from $this->getAvailableDictionaryInformation();
     }
@@ -171,28 +129,18 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
      *
      * @throws DictionaryNotFoundException When the dictionary does not exist.
      */
+    #[\Override]
     public function getDictionaryForWrite(
         string $name,
         string $sourceLanguage,
         string $targetLanguage,
         array $customData = []
     ): WritableDictionaryInterface {
-        $this->logger->debug('Contao: opening writable dictionary ' . $name);
+        $this->logger?->debug('Contao: opening writable dictionary ' . $name);
         if (array_key_exists($name, $this->dictionaryMeta)) {
-            $metaData   = $this->dictionaryMeta[$name];
-            $dictionary = new ContaoTableDictionary(
-                $metaData['table'],
-                $sourceLanguage,
-                $targetLanguage,
-                $this->connection,
-                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
-                $this->extractorFactory->getExtractorsForTable($metaData['table'])
-            );
-            $dictionary->setLogger($this->logger);
-
-            return $dictionary;
+            return $this->getContaoDictionaryForMeta($this->dictionaryMeta[$name], $sourceLanguage, $targetLanguage);
         }
-        if (static::ALL_TABLES === $name) {
+        if (self::ALL_TABLES === $name) {
             $dictionary = new WritableCompoundDictionary($sourceLanguage, $targetLanguage);
             foreach (array_keys($this->dictionaryMeta) as $subName) {
                 $dictionary->addDictionary(
@@ -209,52 +157,24 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
     /**
      * {@inheritDoc}
      *
-     * @throws \RuntimeException Creating dictionaries is not supported by this class.
+     * @throws InvalidArgumentException Creating dictionaries is not supported by this class.
      */
+    #[\Override]
     public function createDictionary(
         string $name,
         string $sourceLanguage,
         string $targetLanguage,
         array $customData = []
     ): WritableDictionaryInterface {
-        throw new \RuntimeException('Creating new dictionaries is not supported.');
-    }
-
-    /**
-     * Add a dictionary meta information.
-     *
-     * @param array|string $item The meta array or table name if name, table and map are all the same.
-     *
-     * @return static
-     */
-    public function addDictionaryMeta($item)
-    {
-        if (\is_string($item)) {
-            $item = [
-                'name'  => $item,
-                'table' => $item,
-                'map'   => $item,
-            ];
-        }
-
-        $name  = $item['name'];
-        $table = ($item['table'] ?? $name);
-        $map   = ($item['map'] ?? $name);
-
-        $this->dictionaryMeta[$name] = [
-            'table' => $table,
-            'map'   => $map,
-        ];
-
-        return $this;
+        throw new InvalidArgumentException('Creating new dictionaries is not supported.');
     }
 
     /**
      * Obtain all dictionary information.
      *
-     * @return \Traversable|DictionaryInformation[]
+     * @return Traversable<int, DictionaryInformation>
      */
-    public function getAvailableDictionaryInformation(): \Traversable
+    public function getAvailableDictionaryInformation(): Traversable
     {
         $languages = $this->getContaoLanguages();
 
@@ -267,7 +187,7 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
                     yield new DictionaryInformation($dictionary, $sourceLanguage, $targetLanguage);
                 }
 
-                yield new DictionaryInformation(static::ALL_TABLES, $sourceLanguage, $targetLanguage);
+                yield new DictionaryInformation(self::ALL_TABLES, $sourceLanguage, $targetLanguage);
             }
         }
     }
@@ -275,24 +195,103 @@ class ContaoDictionaryProvider implements DictionaryProviderInterface, WritableD
     /**
      * Fetch all languages from Contao.
      *
-     * @return array
+     * @return list<string>
      */
     private function getContaoLanguages(): array
     {
-        $languages = [];
-        foreach ($this->connection->createQueryBuilder()
-                     ->select('language', 'id', 'fallback')
-                     ->from('tl_page')
-                     ->where('type=:type')
-                     ->setParameter('type', 'root')
-                     ->orderBy('fallback')
-                     ->addOrderBy('sorting')
-                     ->execute()->fetchAll(\PDO::FETCH_ASSOC) as $root) {
-            $language = $root['language'];
-
-            $languages[] = $language;
-        }
+        $builder = $this->connection
+            ->createQueryBuilder()
+            ->select('language')
+            ->from('tl_page')
+            ->where('type=:type')
+            ->setParameter('type', 'root')
+            ->orderBy('fallback')
+            ->addOrderBy('sorting');
+        /** @var list<string> $languages */
+        $languages = $this->connection
+            ->executeQuery($builder->getSQL(), $builder->getParameters(), $builder->getParameterTypes())
+            ->fetchFirstColumn();
 
         return $languages;
+    }
+
+    /** @return iterable<string, TContaoDictionaryMetaData> */
+    private function mapDictionaryMeta(array $dictionaryMeta): iterable
+    {
+        foreach ($dictionaryMeta as $item) {
+            $this->checkMetaEntry($item);
+            if (is_string($item)) {
+                yield $item => [
+                    'table' => $item,
+                    'map'   => $item,
+                ];
+                continue;
+            }
+            $name = $item['name'];
+            $table = $item['table'] ?? $name;
+            /** @psalm-suppress DocblockTypeContradiction - array shape is not type safe. */
+            if (!is_string($table)) {
+                throw new InvalidArgumentException('Table name must be a string.');
+            }
+            $map = $item['map'] ?? $name;
+            /** @psalm-suppress DocblockTypeContradiction - array shape is not type safe. */
+            if (!is_string($map)) {
+                throw new InvalidArgumentException('Map name must be a string.');
+            }
+
+            yield $name => [
+                'table' => $table,
+                'map'   => $map,
+            ];
+        }
+    }
+
+    /** @psalm-assert TContaoDictionaryMetaDataInput $entry */
+    private function checkMetaEntry(mixed $entry): void
+    {
+        if (is_string($entry)) {
+            return;
+        }
+        if (!is_array($entry)) {
+            throw new InvalidArgumentException('Invalid meta data');
+        }
+        if (!is_string($name = $entry['name'] ?? null)) {
+            throw new InvalidArgumentException('Name must be present and a string.');
+        }
+        if (!is_string($entry['table'] ?? $name)) {
+            throw new InvalidArgumentException('Table name must be a string.');
+        }
+        if (!is_string($entry['map'] ?? $name)) {
+            throw new InvalidArgumentException('Map name must be a string.');
+        }
+    }
+
+    /** @param TContaoDictionaryMetaData $metaData */
+    private function getContaoDictionaryForMeta(
+        array $metaData,
+        string $sourceLanguage,
+        string $targetLanguage
+    ): WritableDictionaryInterface {
+        if ($metaData['table'] === 'tl_files') {
+            $dictionary = new ContaoFilesDictionary(
+                $sourceLanguage,
+                $targetLanguage,
+                $this->connection,
+                $this->extractorFactory->getExtractorsForTable($metaData['table'])
+            );
+        } else {
+            $dictionary = new ContaoTableDictionary(
+                $metaData['table'],
+                $sourceLanguage,
+                $targetLanguage,
+                $this->connection,
+                $this->mapBuilder->getMappingFor($metaData['map'], $sourceLanguage, $targetLanguage),
+                $this->extractorFactory->getExtractorsForTable($metaData['table'])
+            );
+        }
+        if ($this->logger) {
+            $dictionary->setLogger($this->logger);
+        }
+        return $dictionary;
     }
 }

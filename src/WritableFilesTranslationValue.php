@@ -12,14 +12,14 @@ use InvalidArgumentException;
 use function get_class;
 
 /** This is the Contao translation value writer. */
-final class WritableTranslationValue extends TranslationValue implements WritableTranslationValueInterface
+final class WritableFilesTranslationValue extends FilesTranslationValue implements WritableTranslationValueInterface
 {
     #[\Override]
     public function setSource(string $value): void
     {
         $row = $this->getSourceRow();
         $this->setValue($row, $value);
-        $this->dictionary->updateRow($this->sourceId, $row);
+        $this->dictionary->updateRow($this->rowId, $this->dictionary->getSourceLanguage(), $row);
     }
 
     #[\Override]
@@ -27,7 +27,7 @@ final class WritableTranslationValue extends TranslationValue implements Writabl
     {
         $row = $this->getTargetRow();
         $this->setValue($row, $value);
-        $this->dictionary->updateRow($this->targetId, $row);
+        $this->dictionary->updateRow($this->rowId, $this->dictionary->getTargetLanguage(), $row);
     }
 
     #[\Override]
@@ -35,7 +35,7 @@ final class WritableTranslationValue extends TranslationValue implements Writabl
     {
         $row = $this->getSourceRow();
         $this->setValue($row, null);
-        $this->dictionary->updateRow($this->sourceId, $row);
+        $this->dictionary->updateRow($this->rowId, $this->dictionary->getSourceLanguage(), $row);
     }
 
     #[\Override]
@@ -43,7 +43,7 @@ final class WritableTranslationValue extends TranslationValue implements Writabl
     {
         $row = $this->getTargetRow();
         $this->setValue($row, null);
-        $this->dictionary->updateRow($this->targetId, $row);
+        $this->dictionary->updateRow($this->rowId, $this->dictionary->getTargetLanguage(), $row);
     }
 
     /**

@@ -1,257 +1,171 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage;
 
+use InvalidArgumentException;
+use LogicException;
 use Psr\Log\LoggerInterface;
+use Traversable;
+
+use function array_diff;
+use function array_key_exists;
+use function array_keys;
+use function array_values;
+use function count;
+use function get_class;
+use function implode;
+use function ucfirst;
 
 /**
  * This maps page ids between a source language and a target language via the main language.
+ *
+ * @psalm-require-implements \CyberSpectrum\I18N\Contao\Mapping\MappingInterface
  */
 trait MapTrait
 {
-    /**
-     * The connection.
-     *
-     * @var ContaoDatabase
-     */
-    private $database;
+    /** The connection. */
+    private ContaoDatabase $database;
 
-    /**
-     * The logger.
-     *
-     * @var LoggerInterface
-     */
-    private $logger;
+    /** The logger. */
+    private LoggerInterface $logger;
 
-    /**
-     * The source language.
-     *
-     * @var string
-     */
-    private $sourceLanguage;
+    /** The source language. */
+    private string $sourceLanguage;
 
-    /**
-     * The target language.
-     *
-     * @var string
-     */
-    private $targetLanguage;
+    /** The target language. */
+    private string $targetLanguage;
 
-    /**
-     * The main language.
-     *
-     * @var string
-     */
-    private $mainLanguage;
+    /** The main language. */
+    private ?string $mainLanguage = null;
 
     /**
      * The mapping from source to main language.
      *
      * $sourceId => $mainId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $sourceMap = [];
+    private array $sourceMap = [];
 
     /**
      * The mapping from main to source language.
      *
      * $mainId => $sourceId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $sourceMapInverse = [];
+    private array $sourceMapInverse = [];
 
     /**
      * The mapping from target to main language.
      *
      * $targetId => $mainId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $targetMap = [];
+    private array $targetMap = [];
 
     /**
      * The mapping from main to target language.
      *
      * $mainId => $targetId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $targetMapInverse = [];
+    private array $targetMapInverse = [];
 
     /**
      * The mapping from source to target language.
      *
      * $sourceId => $targetId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $map = [];
+    private array $map = [];
 
     /**
      * The inverse mapping.
      *
      * $targetId => $sourceId
      *
-     * @var int[]
+     * @var array<int, int>
      */
-    private $mapInverse = [];
+    private array $mapInverse = [];
 
-    /**
-     * Obtain source language.
-     *
-     * @return string
-     */
     public function getSourceLanguage(): string
     {
         return $this->sourceLanguage;
     }
 
-    /**
-     * Obtain target language.
-     *
-     * @return string
-     */
     public function getTargetLanguage(): string
     {
         return $this->targetLanguage;
     }
 
-    /**
-     * Obtain main language.
-     *
-     * @return string
-     */
     public function getMainLanguage(): string
     {
+        if (null === $this->mainLanguage) {
+            throw new LogicException('Main language has not been set.');
+        }
         return $this->mainLanguage;
     }
 
-    /**
-     * Obtain the source ids.
-     *
-     * @return \Traversable|int[]
-     */
-    public function sourceIds(): \Traversable
+    /** @return Traversable<int, int> */
+    public function sourceIds(): Traversable
     {
-        yield from array_values($this->mapInverse);
+        foreach ($this->mapInverse as $item) {
+            yield $item;
+        }
     }
 
-    /**
-     * Obtain the source ids.
-     *
-     * @return \Traversable|int[]
-     */
-    public function targetIds(): \Traversable
+    /** @return Traversable<int, int> */
+    public function targetIds(): Traversable
     {
-        yield from array_values($this->map);
+        foreach ($this->map as $item) {
+            yield $item;
+        }
     }
 
-    /**
-     * Check if the passed source has a mapping to the target language.
-     *
-     * @param int $sourceId The source id to check.
-     *
-     * @return bool
-     */
     public function hasTargetFor(int $sourceId): bool
     {
         return array_key_exists($sourceId, $this->map);
     }
 
-    /**
-     * Obtain the target id for the passed source.
-     *
-     * @param int $sourceId The source id.
-     *
-     * @return int
-     *
-     * @throws \RuntimeException When the passed id is not mapped.
-     */
     public function getTargetIdFor(int $sourceId): int
     {
         if (!array_key_exists($sourceId, $this->map)) {
-            throw new \RuntimeException('Not mapped');
+            throw new InvalidArgumentException('Not mapped');
         }
         return $this->map[$sourceId];
     }
 
-    /**
-     * Obtain the source id for the passed target.
-     *
-     * @param int $targetId The source id.
-     *
-     * @return int
-     *
-     * @throws \RuntimeException When the passed id is not mapped.
-     */
     public function getSourceIdFor(int $targetId): int
     {
         if (!array_key_exists($targetId, $this->mapInverse)) {
-            throw new \RuntimeException('Not mapped');
+            throw new InvalidArgumentException('Not mapped');
         }
         return $this->mapInverse[$targetId];
     }
 
-    /**
-     * Obtain the main id from a source id.
-     *
-     * @param int $sourceId The source id.
-     *
-     * @return int
-     *
-     * @throws \RuntimeException When the passed id is not mapped.
-     */
     public function getMainFromSource(int $sourceId): int
     {
         if (!array_key_exists($sourceId, $this->sourceMap)) {
-            throw new \RuntimeException('Not mapped');
+            throw new InvalidArgumentException('Not mapped');
         }
         return $this->sourceMap[$sourceId];
     }
 
-    /**
-     * Obtain the main id from a target id.
-     *
-     * @param int $target The target id.
-     *
-     * @return int
-     *
-     * @throws \RuntimeException When the passed id is not mapped.
-     */
     public function getMainFromTarget(int $target): int
     {
         if (!array_key_exists($target, $this->targetMap)) {
-            throw new \RuntimeException('Not mapped');
+            throw new InvalidArgumentException('Not mapped');
         }
         return $this->targetMap[$target];
     }
 
-    /**
-     * Create the combined map from source and target.
-     *
-     * @return void
-     */
+    /** Create the combined map from source and target. */
     public function combineSourceAndTargetMaps(): void
     {
         $this->analyzeMap();
@@ -266,11 +180,7 @@ trait MapTrait
         }
     }
 
-    /**
-     * Analyze the map for common mistakes.
-     *
-     * @return void
-     */
+    /** Analyze the map for common mistakes. */
     public function analyzeMap(): void
     {
         $this->analyzeDuplicates('source', $this->sourceLanguage, $this->sourceMap, $this->sourceMapInverse);
@@ -288,7 +198,7 @@ trait MapTrait
                         'targetId'       => $targetId,
                         'mainId'         => $mainId,
                         'msg_type'       => 'no_source_for_target',
-                        'class'          => \get_class($this),
+                        'class'          => get_class($this),
                     ]
                 );
             }
@@ -298,16 +208,14 @@ trait MapTrait
     /**
      * Analyze duplicates in the mapping of a table.
      *
-     * @param string $mapName  The name of the map analyzed.
-     * @param string $language The language of the map.
-     * @param array  $map      The map.
-     * @param array  $inverse  The inverse map.
-     *
-     * @return void
+     * @param string          $mapName  The name of the map analyzed.
+     * @param string          $language The language of the map.
+     * @param array<int, int> $map      The map.
+     * @param array<int, int> $inverse  The inverse map.
      */
     protected function analyzeDuplicates(string $mapName, string $language, array $map, array $inverse): void
     {
-        if (\count($inverse) !== \count($map)) {
+        if (count($inverse) !== count($map)) {
             $diff = array_diff(array_keys($map), array_values($inverse));
             foreach ($diff as $mapId) {
                 $mainId   = $map[$mapId];
@@ -327,18 +235,14 @@ trait MapTrait
                         'mainId'         => $mainId,
                         'multiple'       => $multiple,
                         'msg_type'       => 'multiple_mapping_in_' . $mapName,
-                        'class'          => \get_class($this),
+                        'class'          => get_class($this),
                     ]
                 );
             }
         }
     }
 
-    /**
-     * Obtain the database.
-     *
-     * @return ContaoDatabase
-     */
+    /** Obtain the database. */
     public function getDatabase(): ContaoDatabase
     {
         return $this->database;

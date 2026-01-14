@@ -1,51 +1,40 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
+use ArrayIterator;
+use Closure;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\PageMap;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
-/**
- * This tests the article map.
- *
- * @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap
- */
+#[CoversClass(ArticleMap::class)]
 class ArticleMapTest extends TestCase
 {
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
+    /** @SuppressWarnings(PHPMD.ExcessiveMethodLength) */
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapCorrectly(): void
     {
         $database = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger   = $this->getMockForAbstractClass(LoggerInterface::class);
+        $database
+            ->expects($this->once())
+            ->method('getRootPages')
+            ->willReturn([
+                ['id' => 101, 'language' => 'de', 'fallback' => '1'],
+                ['id' => 102, 'language' => 'fr', 'fallback' => ''],
+            ]);
+
+        $logger   = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $pageMap  = $this
             ->getMockBuilder(PageMap::class)
-            ->setMethods(['buildMap', 'sourceIds', 'targetIds', 'getMainFromSource', 'getMainFromTarget'])
+            ->onlyMethods(['sourceIds', 'targetIds', 'getMainFromSource', 'getMainFromTarget'])
             ->setConstructorArgs([
                 'de',
                 'fr',
@@ -53,60 +42,92 @@ class ArticleMapTest extends TestCase
                 $logger
             ])
             ->getMock();
-        $pageMap->expects($this->once())->method('sourceIds')->willReturn(new \ArrayIterator([101, 102]));
+        $pageMap->expects($this->once())->method('sourceIds')->willReturn(new ArrayIterator([101, 102]));
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromSource')
-            ->withConsecutive([101], [102])
-            ->willReturn(1, 2);
+            ->willReturnCallback(
+                static function (int $sourceId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(101, $sourceId);
+                            return 1;
+                        case 1:
+                            self::assertSame(102, $sourceId);
+                            return 2;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
 
-        $pageMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001, 1002]));
+        $pageMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001, 1002]));
         $pageMap
             ->expects($this->exactly(2))
             ->method('getMainFromTarget')
-            ->withConsecutive([1001], [1002])
-            ->willReturn(1, 2);
-        \Closure::fromCallable(function () {
+            ->willReturnCallback(
+                static function (int $targetId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(1001, $targetId);
+                            return 1;
+                        case 1:
+                            self::assertSame(1002, $targetId);
+                            return 2;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
+        (function () {
             $this->mainLanguage = 'en';
-        })->bindTo($pageMap, PageMap::class)->__invoke();
+        })(...)->bindTo($pageMap, PageMap::class)->__invoke();
 
         $database
             ->expects($this->exactly(4))
             ->method('getArticlesByPid')
-            ->withConsecutive([101], [102], [1001], [1002])
-            ->willReturn(
-                [
-                    [
-                        'id'           => 101,
-                        'pid'          => 101,
-                        'inColumn'     => 'main',
-                        'languageMain' => 1,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 102,
-                        'pid'          => 102,
-                        'inColumn'     => 'main',
-                        'languageMain' => 2,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 1001,
-                        'pid'          => 1001,
-                        'inColumn'     => 'main',
-                        'languageMain' => 1,
-                    ],
-                ],
-                [
-                    [
-                        'id'           => 1002,
-                        'pid'          => 1002,
-                        'inColumn'     => 'main',
-                        'languageMain' => 2,
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $pageId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(101, $pageId);
+                            return [[
+                                'id'           => 101,
+                                'pid'          => 101,
+                                'inColumn'     => 'main',
+                                'languageMain' => 1,
+                            ]];
+                        case 1:
+                            self::assertSame(102, $pageId);
+                            return [[
+                                'id'           => 102,
+                                'pid'          => 102,
+                                'inColumn'     => 'main',
+                                'languageMain' => 2,
+                            ]];
+                        case 2:
+                            self::assertSame(1001, $pageId);
+                            return [[
+                                'id'           => 1001,
+                                'pid'          => 1001,
+                                'inColumn'     => 'main',
+                                'languageMain' => 1,
+                            ]];
+                        case 3:
+                            self::assertSame(1002, $pageId);
+                            return [[
+                                'id'           => 1002,
+                                'pid'          => 1002,
+                                'inColumn'     => 'main',
+                                'languageMain' => 2,
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleMap($pageMap, $logger);

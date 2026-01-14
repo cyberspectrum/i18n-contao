@@ -6,7 +6,6 @@ namespace CyberSpectrum\I18N\Contao;
 
 use CyberSpectrum\I18N\Contao\Extractor\ExtractorInterface;
 use CyberSpectrum\I18N\Contao\Extractor\MultiStringExtractorInterface;
-use CyberSpectrum\I18N\Contao\Mapping\MappingInterface;
 use CyberSpectrum\I18N\Dictionary\WritableDictionaryInterface;
 use CyberSpectrum\I18N\Exception\NotSupportedException;
 use CyberSpectrum\I18N\TranslationValue\TranslationValueInterface;
@@ -16,78 +15,50 @@ use InvalidArgumentException;
 use Psr\Log\LoggerAwareTrait;
 use Traversable;
 
-use function array_slice;
-use function count;
-use function get_class;
-
 /** This provides access to a Contao table. */
-final class ContaoTableDictionary implements WritableDictionaryInterface
+final class ContaoFilesDictionary implements WritableDictionaryInterface
 {
     use LoggerAwareTrait;
 
-    /** The table name. */
-    private string $tableName;
-
-    /** The source language. */
-    private string $sourceLanguage;
-
-    /** The target language. */
-    private string $targetLanguage;
-
-    /** Connection. */
-    private Connection $connection;
-
-    /** The page map. */
-    private MappingInterface $idMap;
+    public const TABLE_NAME = 'tl_files';
 
     /**
      * The extractors.
      *
      * @var array<string, ExtractorInterface>
      */
-    private array $extractors = [];
+    private readonly array $extractors;
 
     /**
      * Create a new instance.
      *
-     * @param string                   $tableName      The table name.
      * @param string                   $sourceLanguage The source language.
      * @param string                   $targetLanguage The target language.
      * @param Connection               $connection     The database connection.
-     * @param MappingInterface         $idMap          The page map.
      * @param list<ExtractorInterface> $extractors     The extractors.
      *
      * @throws InvalidArgumentException When one of the passed extractors does not implement the interface.
      */
     public function __construct(
-        string $tableName,
-        string $sourceLanguage,
-        string $targetLanguage,
-        Connection $connection,
-        MappingInterface $idMap,
+        private readonly string $sourceLanguage,
+        private readonly string $targetLanguage,
+        private readonly Connection $connection,
         array $extractors
     ) {
-        $this->tableName      = $tableName;
-        $this->sourceLanguage = $sourceLanguage;
-        $this->targetLanguage = $targetLanguage;
-        $this->connection     = $connection;
-        $this->idMap          = $idMap;
+        $mappedExtractors = [];
         foreach ($extractors as $extractor) {
             if (!$extractor instanceof ExtractorInterface) {
                 throw new InvalidArgumentException('Object is not an extractor ' . get_class($extractor));
             }
-            $this->extractors[$extractor->name()] = $extractor;
+            $mappedExtractors[$extractor->name()] = $extractor;
         }
+        $this->extractors = $mappedExtractors;
     }
 
     #[\Override]
     public function keys(): Traversable
     {
-        foreach ($this->idMap->sourceIds() as $sourceId) {
-            if (!$this->idMap->hasTargetFor($sourceId)) {
-                continue;
-            }
-
+        foreach ($this->getSourceIds() as $sourceId) {
             foreach ($this->getKeysForSource($sourceId) as $propKey) {
                 yield (string) $sourceId . '.' . $propKey;
             }
@@ -114,9 +85,8 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
         }
 
         $sourceId = (int) $chunks[0];
-        $targetId = $this->idMap->getTargetIdFor($sourceId);
 
-        return $this->createValueReader($sourceId, $targetId, $extractor, implode('.', array_slice($chunks, 2)));
+        return $this->createValueReader($sourceId, $extractor, implode('.', array_slice($chunks, 2)));
     }
 
     #[\Override]
@@ -132,7 +102,8 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
             return false;
         }
 
-        return $this->idMap->hasTargetFor((int) $chunks[0]);
+        // We assume that any language exists as long as the source still exists.
+        return $this->getRowForLanguage((int) $chunks[0], $this->sourceLanguage) !== [];
     }
 
     #[\Override]
@@ -179,15 +150,8 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
         }
 
         $sourceId = (int) $chunks[0];
-        $targetId = $this->idMap->getTargetIdFor($sourceId);
 
-        return $this->createValueWriter($sourceId, $targetId, $extractor, implode('.', array_slice($chunks, 2)));
-    }
-
-    /** Retrieve connection. */
-    public function getConnection(): Connection
-    {
-        return $this->connection;
+        return $this->createValueWriter($sourceId, $extractor, implode('.', array_slice($chunks, 2)));
     }
 
     /**
@@ -197,11 +161,54 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
      *
      * @return array<string, mixed>
      */
-    public function getRow(int $idNumber): array
+    public function getRowForLanguage(int $idNumber, string $language): array
+    {
+        $result = $this->getRow($idNumber);
+
+        $meta = unserialize($result['meta'] ?? 'a:0:{}', ['allowed_classes' => false]);
+        assert(is_array($meta));
+        $languageMeta = $meta[$language] ?? null;
+        assert(is_array($languageMeta) || null === $languageMeta);
+        /** @var array<string, mixed>|null $languageMeta */
+        return $languageMeta ?? [];
+    }
+
+    /**
+     * Fetch a row.
+     *
+     * @param int                  $idNumber The id to fetch.
+     * @param array<string, mixed> $values   The row values to update.
+     *
+     * @return void
+     */
+    public function updateRow(int $idNumber, string $language, array $values): void
+    {
+        $row = $this->getRow($idNumber);
+        $meta = unserialize($row['meta'] ?? 'a:0:{}', ['allowed_classes' => false]) ?? [];
+        assert(is_array($meta));
+        $meta[$language] = $values;
+        $row['meta'] = serialize($meta);
+        $this->connection->update(self::TABLE_NAME, $row, ['id' => $idNumber]);
+    }
+
+    /** Retrieve connection. */
+    private function getConnection(): Connection
+    {
+        return $this->connection;
+    }
+
+    /**
+     * Fetch a row.
+     *
+     * @param int $idNumber The id to fetch.
+     *
+     * @return array{meta: ?string, ...<string, mixed>}
+     */
+    private function getRow(int $idNumber): array
     {
         $queryBuilder = $this->getConnection()->createQueryBuilder()
             ->select('*')
-            ->from($this->tableName)
+            ->from(self::TABLE_NAME)
             ->where('id=:id')
             ->setParameter('id', $idNumber)
             ->setMaxResults(1);
@@ -213,21 +220,9 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
         if (!is_array($result)) {
             throw new InvalidArgumentException('Failed to fetch row with id ' . (string) $idNumber);
         }
+        assert(is_string($result['meta']) || null === $result['meta']);
 
         return $result;
-    }
-
-    /**
-     * Fetch a row.
-     *
-     * @param int                  $idNumber The id to fetch.
-     * @param array<string, mixed> $values   The row values to update.
-     *
-     * @return void
-     */
-    public function updateRow(int $idNumber, array $values): void
-    {
-        $this->connection->update($this->tableName, $values, ['id' => $idNumber]);
     }
 
     /**
@@ -239,9 +234,9 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
      *
      * @throws InvalidArgumentException When the extractor is unknown.
      */
-    protected function getKeysForSource(int $sourceId): Traversable
+    private function getKeysForSource(int $sourceId): Traversable
     {
-        $row = $this->getRow($sourceId);
+        $row = $this->getRowForLanguage($sourceId, $this->sourceLanguage);
         foreach ($this->extractors as $extractor) {
             switch (true) {
                 case $extractor instanceof MultiStringExtractorInterface:
@@ -265,7 +260,7 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
      *
      * @param string $propName The property path.
      */
-    protected function getExtractor(string $propName): ?ExtractorInterface
+    private function getExtractor(string $propName): ?ExtractorInterface
     {
         return ($this->extractors[$propName] ?? null);
     }
@@ -274,37 +269,60 @@ final class ContaoTableDictionary implements WritableDictionaryInterface
      * Create a value reader instance.
      *
      * @param int                $sourceId  The source id.
-     * @param int                $targetId  The target id.
      * @param ExtractorInterface $extractor The extractor to use.
      * @param string             $trail     The trailing sub path.
      *
      * @return TranslationValueInterface
      */
-    protected function createValueReader(
+    private function createValueReader(
         int $sourceId,
-        int $targetId,
         ExtractorInterface $extractor,
         string $trail
     ): TranslationValueInterface {
-        return new TranslationValue($this, $sourceId, $targetId, $extractor, $trail);
+        return new FilesTranslationValue($this, $sourceId, $extractor, $trail);
     }
 
     /**
      * Create a value writer instance.
      *
      * @param int                $sourceId  The source id.
-     * @param int                $targetId  The target id.
      * @param ExtractorInterface $extractor The extractor to use.
      * @param string             $trail     The trailing sub path.
      *
      * @return WritableTranslationValueInterface
      */
-    protected function createValueWriter(
+    private function createValueWriter(
         int $sourceId,
-        int $targetId,
         ExtractorInterface $extractor,
         string $trail
     ): WritableTranslationValueInterface {
-        return new WritableTranslationValue($this, $sourceId, $targetId, $extractor, $trail);
+        return new WritableFilesTranslationValue($this, $sourceId, $extractor, $trail);
+    }
+
+    /** @return iterable<int, int> */
+    private function getSourceIds(): iterable
+    {
+        $queryBuilder = $this->connection->createQueryBuilder()
+            ->select('id')
+            ->from('tl_files')
+            ->setMaxResults(100)
+            ->orderBy('path', 'ASC');
+        $page = 0;
+        while (true) {
+            $rows = $queryBuilder->setFirstResult($page * 100)->executeQuery();
+            $result = [];
+            while ($row = $rows->fetchAssociative()) {
+                /** @var array{id: string, type: string} $row */
+                $result[] = (int) $row['id'];
+            }
+
+            foreach ($result as $idValue) {
+                yield $idValue;
+            }
+            if (count($result) < 100) {
+                break;
+            }
+            $page++;
+        }
     }
 }

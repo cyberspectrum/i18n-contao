@@ -1,51 +1,36 @@
 <?php
 
-/**
- * This file is part of cyberspectrum/i18n-contao.
- *
- * (c) 2018 CyberSpectrum.
- *
- * For the full copyright and license information, please view the LICENSE
- * file that was distributed with this source code.
- *
- * This project is provided in good faith and hope to be usable by anyone.
- *
- * @package    cyberspectrum/i18n-contao
- * @author     Christian Schiffler <c.schiffler@cyberspectrum.de>
- * @copyright  2018 CyberSpectrum.
- * @license    https://github.com/cyberspectrum/i18n-contao/blob/master/LICENSE MIT
- * @filesource
- */
-
-declare(strict_types = 1);
+declare(strict_types=1);
 
 namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 
+use ArrayIterator;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleContentMap;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleMap;
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
-/**
- * This tests the article map.
- *
- * @covers \CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ArticleContentMap
- */
+use function iterator_to_array;
+
+#[CoversClass(ArticleContentMap::class)]
 class ArticleContentMapTest extends TestCase
 {
     /**
-     * Test the map building.
-     *
-     * @return void
+     * @SuppressWarnings(PHPMD.CyclomaticComplexity)
+     * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
      */
+    #[AllowMockObjectsWithoutExpectations]
     public function testBuildsMapCorrectly(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -61,61 +46,92 @@ class ArticleContentMapTest extends TestCase
         $articleMap->expects($this->once())->method('getTargetLanguage')->willReturn('fr');
         $articleMap->expects($this->once())->method('getMainLanguage')->willReturn('en');
         $articleMap->expects($this->once())->method('getDatabase')->willReturn($database);
-
-        $articleMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001, 1002]));
+        $articleMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001, 1002]));
         $articleMap
             ->expects($this->exactly(2))
             ->method('getMainFromTarget')
-            ->withConsecutive([1001], [1002])
-            ->willReturn(1, 2);
+            ->willReturnCallback(
+                static function (int $targetId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(1001, $targetId);
+                            return 1;
+                        case 1:
+                            self::assertSame(1002, $targetId);
+                            return 2;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
 
         $articleMap
             ->expects($this->exactly(2))
             ->method('getSourceIdFor')
-            ->withConsecutive([1001], [1002])
-            ->willReturn(101, 102);
+            ->willReturnCallback(
+                static function (int $targetId): int {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(1001, $targetId);
+                            return 101;
+                        case 1:
+                            self::assertSame(1002, $targetId);
+                            return 102;
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
+            );
 
         $database
             ->expects($this->exactly(6))
             ->method('getContentByPidFrom')
-            ->withConsecutive([1001], [101], [1], [1002], [102], [2])
-            ->willReturn(
-                [
-                    [
-                        'id'   => 1001,
-                        'type' => 'text',
-                    ],
-                ],
-                [
-                    [
-                        'id'   => 101,
-                        'type' => 'text',
-                    ],
-                ],
-                [
-                    [
-                        'id'   => 1,
-                        'type' => 'text',
-                    ],
-                ],
-                [
-                    [
-                        'id'   => 1002,
-                        'type' => 'text',
-                    ],
-                ],
-                [
-                    [
-                        'id'   => 102,
-                        'type' => 'text',
-                    ],
-                ],
-                [
-                    [
-                        'id'   => 2,
-                        'type' => 'text',
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $articleId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            self::assertSame(1001, $articleId);
+                            return [[
+                                'id'   => 1001,
+                                'type' => 'text',
+                            ]];
+                        case 1:
+                            self::assertSame(101, $articleId);
+                            return [[
+                                'id'   => 101,
+                                'type' => 'text',
+                            ]];
+                        case 2:
+                            self::assertSame(1, $articleId);
+                            return [[
+                                'id'   => 1,
+                                'type' => 'text',
+                            ]];
+                        case 3:
+                            self::assertSame(1002, $articleId);
+                            return [[
+                                'id'   => 1002,
+                                'type' => 'text',
+                            ]];
+                        case 4:
+                            self::assertSame(102, $articleId);
+                            return [[
+                                'id'   => 102,
+                                'type' => 'text',
+                            ]];
+                        case 5:
+                            self::assertSame(2, $articleId);
+                            return [[
+                                'id'   => 2,
+                                'type' => 'text',
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleContentMap($articleMap, $logger);
@@ -130,18 +146,14 @@ class ArticleContentMapTest extends TestCase
         $this->assertSame(2, $map->getMainFromTarget(1002));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
+    #[AllowMockObjectsWithoutExpectations]
     public function testSkipsForUnknownMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -158,50 +170,54 @@ class ArticleContentMapTest extends TestCase
         $articleMap->expects($this->once())->method('getMainLanguage')->willReturn('en');
         $articleMap->expects($this->once())->method('getDatabase')->willReturn($database);
 
-        $articleMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001]));
-        $articleMap->expects($this->once())->method('getMainFromTarget')->withConsecutive([1001])->willReturn(1);
-        $articleMap->expects($this->once())->method('getSourceIdFor')->withConsecutive([1001])->willReturn(101);
+        $articleMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001]));
+        $articleMap->expects($this->once())->method('getMainFromTarget')->with(1001)->willReturn(1);
+        $articleMap->expects($this->once())->method('getSourceIdFor')->with(1001)->willReturn(101);
 
         $database
             ->expects($this->exactly(3))
             ->method('getContentByPidFrom')
-            ->withConsecutive([1001], [101], [1])
-            ->willReturn(
-                // Target
-                [
-                    [
-                        'id'   => 1001,
-                        'type' => 'text',
-                    ],
-                ],
-                // Source
-                [
-                    [
-                        'id'   => 101,
-                        'type' => 'text',
-                    ],
-                ],
-                // Main
-                []
+            ->willReturnCallback(
+                static function (int $articleId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Target
+                            self::assertSame(1001, $articleId);
+                            return [[
+                                'id' => 1001,
+                                'type' => 'text',
+                            ]];
+                        case 1:
+                            // Source
+                            self::assertSame(101, $articleId);
+                            return [[
+                                'id'   => 101,
+                                'type' => 'text',
+                            ]];
+                        case 2:
+                            // Main
+                            self::assertSame(1, $articleId);
+                            return [];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleContentMap($articleMap, $logger);
-        $this->assertSame([], \iterator_to_array($map->sourceIds()));
-        $this->assertSame([], \iterator_to_array($map->targetIds()));
+        $this->assertSame([], iterator_to_array($map->sourceIds()));
+        $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInSource(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -218,55 +234,57 @@ class ArticleContentMapTest extends TestCase
         $articleMap->expects($this->once())->method('getMainLanguage')->willReturn('en');
         $articleMap->expects($this->once())->method('getDatabase')->willReturn($database);
 
-        $articleMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001]));
-        $articleMap->expects($this->once())->method('getMainFromTarget')->withConsecutive([1001])->willReturn(1);
-        $articleMap->expects($this->once())->method('getSourceIdFor')->withConsecutive([1001])->willReturn(101);
+        $articleMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001]));
+        $articleMap->expects($this->once())->method('getMainFromTarget')->with(1001)->willReturn(1);
+        $articleMap->expects($this->once())->method('getSourceIdFor')->with(1001)->willReturn(101);
 
         $database
             ->expects($this->exactly(3))
             ->method('getContentByPidFrom')
-            ->withConsecutive([1001], [101], [1])
-            ->willReturn(
-                // Target
-                [
-                    [
-                        'id'   => 1001,
-                        'type' => 'text',
-                    ],
-                ],
-                // Source
-                [
-                    [
-                        'id'   => 101,
-                        'type' => 'headline',
-                    ],
-                ],
-                // Main
-                [
-                    [
-                        'id'   => 1,
-                        'type' => 'text',
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $articleId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Target
+                            self::assertSame(1001, $articleId);
+                            return [[
+                                'id' => 1001,
+                                'type' => 'text',
+                            ]];
+                        case 1:
+                            // Source
+                            self::assertSame(101, $articleId);
+                            return [[
+                                'id'   => 101,
+                                'type' => 'headline',
+                            ]];
+                        case 2:
+                            // Main
+                            self::assertSame(1, $articleId);
+                            return [[
+                                'id'   => 1,
+                                'type' => 'text',
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleContentMap($articleMap, $logger);
-        $this->assertSame([], \iterator_to_array($map->sourceIds()));
-        $this->assertSame([], \iterator_to_array($map->targetIds()));
+        $this->assertSame([], iterator_to_array($map->sourceIds()));
+        $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInTarget(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -283,55 +301,57 @@ class ArticleContentMapTest extends TestCase
         $articleMap->expects($this->once())->method('getMainLanguage')->willReturn('en');
         $articleMap->expects($this->once())->method('getDatabase')->willReturn($database);
 
-        $articleMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001]));
-        $articleMap->expects($this->once())->method('getMainFromTarget')->withConsecutive([1001])->willReturn(1);
-        $articleMap->expects($this->once())->method('getSourceIdFor')->withConsecutive([1001])->willReturn(101);
+        $articleMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001]));
+        $articleMap->expects($this->once())->method('getMainFromTarget')->with(1001)->willReturn(1);
+        $articleMap->expects($this->once())->method('getSourceIdFor')->with(1001)->willReturn(101);
 
         $database
             ->expects($this->exactly(3))
             ->method('getContentByPidFrom')
-            ->withConsecutive([1001], [101], [1])
-            ->willReturn(
-                // Target
-                [
-                    [
-                        'id'   => 1001,
-                        'type' => 'headline',
-                    ],
-                ],
-                // Source
-                [
-                    [
-                        'id'   => 101,
-                        'type' => 'text',
-                    ],
-                ],
-                // Main
-                [
-                    [
-                        'id'   => 1,
-                        'type' => 'text',
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $articleId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Target
+                            self::assertSame(1001, $articleId);
+                            return [[
+                                'id' => 1001,
+                                'type' => 'headline',
+                            ]];
+                        case 1:
+                            // Source
+                            self::assertSame(101, $articleId);
+                            return [[
+                                'id'   => 101,
+                                'type' => 'text',
+                            ]];
+                        case 2:
+                            // Main
+                            self::assertSame(1, $articleId);
+                            return [[
+                                'id'   => 1,
+                                'type' => 'text',
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleContentMap($articleMap, $logger);
-        $this->assertSame([], \iterator_to_array($map->sourceIds()));
-        $this->assertSame([], \iterator_to_array($map->targetIds()));
+        $this->assertSame([], iterator_to_array($map->sourceIds()));
+        $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 
-    /**
-     * Test the map building.
-     *
-     * @return void
-     */
+    #[AllowMockObjectsWithoutExpectations]
     public function testIgnoresDifferentTypeInMain(): void
     {
         $database   = $this->getMockBuilder(ContaoDatabase::class)->disableOriginalConstructor()->getMock();
-        $logger     = $this->getMockForAbstractClass(LoggerInterface::class);
+        $logger     = $this->getMockBuilder(LoggerInterface::class)->getMock();
         $articleMap = $this
             ->getMockBuilder(ArticleMap::class)
-            ->setMethods([
+            ->onlyMethods([
                 'getSourceLanguage',
                 'getTargetLanguage',
                 'getMainLanguage',
@@ -348,40 +368,46 @@ class ArticleContentMapTest extends TestCase
         $articleMap->expects($this->once())->method('getMainLanguage')->willReturn('en');
         $articleMap->expects($this->once())->method('getDatabase')->willReturn($database);
 
-        $articleMap->expects($this->once())->method('targetIds')->willReturn(new \ArrayIterator([1001]));
-        $articleMap->expects($this->once())->method('getMainFromTarget')->withConsecutive([1001])->willReturn(1);
-        $articleMap->expects($this->once())->method('getSourceIdFor')->withConsecutive([1001])->willReturn(101);
+        $articleMap->expects($this->once())->method('targetIds')->willReturn(new ArrayIterator([1001]));
+        $articleMap->expects($this->once())->method('getMainFromTarget')->with(1001)->willReturn(1);
+        $articleMap->expects($this->once())->method('getSourceIdFor')->with(1001)->willReturn(101);
 
         $database
             ->expects($this->exactly(3))
             ->method('getContentByPidFrom')
-            ->withConsecutive([1001], [101], [1])
-            ->willReturn(
-                // Target
-                [
-                    [
-                        'id'   => 1001,
-                        'type' => 'text',
-                    ],
-                ],
-                // Source
-                [
-                    [
-                        'id'   => 101,
-                        'type' => 'text',
-                    ],
-                ],
-                // Main
-                [
-                    [
-                        'id'   => 1,
-                        'type' => 'headline',
-                    ],
-                ]
+            ->willReturnCallback(
+                static function (int $articleId): array {
+                    static $invocation = 0;
+                    switch ($invocation++) {
+                        case 0:
+                            // Target
+                            self::assertSame(1001, $articleId);
+                            return [[
+                                'id' => 1001,
+                                'type' => 'text',
+                            ]];
+                        case 1:
+                            // Source
+                            self::assertSame(101, $articleId);
+                            return [[
+                                'id'   => 101,
+                                'type' => 'text',
+                            ]];
+                        case 2:
+                            // Main
+                            self::assertSame(1, $articleId);
+                            return [[
+                                'id'   => 1,
+                                'type' => 'headline',
+                            ]];
+                        default:
+                            throw new RuntimeException('Unexpected invocation');
+                    }
+                }
             );
 
         $map = new ArticleContentMap($articleMap, $logger);
-        $this->assertSame([], \iterator_to_array($map->sourceIds()));
-        $this->assertSame([], \iterator_to_array($map->targetIds()));
+        $this->assertSame([], iterator_to_array($map->sourceIds()));
+        $this->assertSame([], iterator_to_array($map->targetIds()));
     }
 }

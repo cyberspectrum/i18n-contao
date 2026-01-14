@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<psalm
+    hideExternalErrors="true"
+    errorLevel="1"
+    resolveFromConfigFile="true"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <projectFiles>
+        <directory name="src" />
+    </projectFiles>
+    <issueHandlers>
+        <PossiblyUnusedMethod>
+            <errorLevel type="suppress">
+                <!-- This is final and used by child classes that are not part of the public API. -->
+                <referencedMethod name="CyberSpectrum\I18N\Contao\Extractor\AbstractSerializingCompoundExtractor::__construct"/>
+            </errorLevel>
+        </PossiblyUnusedMethod>
+    </issueHandlers>
+</psalm>

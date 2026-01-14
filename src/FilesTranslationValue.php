@@ -14,50 +14,32 @@ use InvalidArgumentException;
 use function get_class;
 
 /** This is the Contao translation value reader. */
-class TranslationValue implements TranslationValueInterface
+class FilesTranslationValue implements TranslationValueInterface
 {
-    /** The dictionary. */
-    protected ContaoTableDictionary $dictionary;
-
-    /** Id of the source dataset. */
-    protected int $sourceId;
-
-    /** Id of the target dataset. */
-    protected int $targetId;
-
-    /** The extractor to use. */
-    protected ExtractorInterface $extractor;
-
-    /** The trailing path. */
-    protected string $trail;
-
     /**
      * Create a new instance.
      *
-     * @param ContaoTableDictionary $dictionary The dictionary.
-     * @param int                   $sourceId   The source id.
-     * @param int                   $targetId   The target id.
+     * @param ContaoFilesDictionary $dictionary The dictionary.
+     * @param int                   $rowId      The row id.
      * @param ExtractorInterface    $extractor  The extractor to use.
      * @param string                $trail      The key trail to pass to the extractor (if sub dictionary).
      */
     public function __construct(
-        ContaoTableDictionary $dictionary,
-        int $sourceId,
-        int $targetId,
-        ExtractorInterface $extractor,
-        string $trail
+        /** The dictionary. */
+        protected ContaoFilesDictionary $dictionary,
+        /** Id of the source dataset. */
+        protected int $rowId,
+        /** The extractor to use. */
+        protected ExtractorInterface $extractor,
+        /** The trailing path. */
+        protected string $trail,
     ) {
-        $this->dictionary = $dictionary;
-        $this->sourceId   = $sourceId;
-        $this->targetId   = $targetId;
-        $this->extractor  = $extractor;
-        $this->trail      = $trail;
     }
 
     #[\Override]
     public function getKey(): string
     {
-        return (string) $this->sourceId . '.' . $this->extractor->name();
+        return (string) $this->rowId . '.' . $this->extractor->name();
     }
 
     #[\Override]
@@ -93,12 +75,7 @@ class TranslationValue implements TranslationValueInterface
      */
     protected function getSourceRow(): array
     {
-        $row = $this->dictionary->getRow($this->sourceId);
-        if (!$row) {
-            throw new TranslationNotFoundException($this->getKey(), $this->dictionary);
-        }
-
-        return $row;
+        return $this->dictionary->getRowForLanguage($this->rowId, $this->dictionary->getSourceLanguage());
     }
 
     /**
@@ -110,12 +87,7 @@ class TranslationValue implements TranslationValueInterface
      */
     protected function getTargetRow(): array
     {
-        $row = $this->dictionary->getRow($this->targetId);
-        if (!$row) {
-            throw new TranslationNotFoundException($this->getKey(), $this->dictionary);
-        }
-
-        return $row;
+        return $this->dictionary->getRowForLanguage($this->rowId, $this->dictionary->getTargetLanguage());
     }
 
     /**
@@ -127,13 +99,10 @@ class TranslationValue implements TranslationValueInterface
      */
     protected function getValue(array $row): ?string
     {
-        switch (true) {
-            case $this->extractor instanceof MultiStringExtractorInterface:
-                return $this->extractor->get($this->trail, $row);
-            case $this->extractor instanceof StringExtractorInterface:
-                return $this->extractor->get($row);
-            default:
-                throw new InvalidArgumentException('Unknown extractor type ' . get_class($this->extractor));
-        }
+        return match (true) {
+            ($this->extractor instanceof MultiStringExtractorInterface) => $this->extractor->get($this->trail, $row),
+            ($this->extractor instanceof StringExtractorInterface) => $this->extractor->get($row),
+            default => throw new InvalidArgumentException('Unknown extractor type ' . get_class($this->extractor)),
+        };
     }
 }
