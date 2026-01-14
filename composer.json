@@ -27,7 +27,7 @@
     "cyberspectrum/i18n": "^1.0",
     "doctrine/dbal": "^3.6",
     "psr/container": "^1.0 || ^2.0",
-    "psr/log": "^2.0 || ^3.0",
+    "psr/log": "^3.0.2",
     "symfony/expression-language": "^5.4 || ^6.0 || ^7.0"
   },
   "require-dev": {
