@@ -7,6 +7,7 @@ namespace CyberSpectrum\I18N\Contao\Test\Mapping\Terminal42ChangeLanguage;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\ContaoDatabase;
 use CyberSpectrum\I18N\Contao\Mapping\Terminal42ChangeLanguage\MapTrait;
 use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversTrait;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -16,6 +17,8 @@ use Symfony\Component\ErrorHandler\BufferingLogger;
 
 use function iterator_to_array;
 
+// FIXME: Remove CoversClass when we drop support for phpunit 10.
+#[CoversClass(MapTrait::class)]
 #[CoversTrait(MapTrait::class)]
 class MapTraitTest extends TestCase
 {
